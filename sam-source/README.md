@@ -30,4 +30,4 @@ RF는 100 MHz cosine × Gaussian 파형의 합입니다. 임의 크기의 두 �
 - [SK hynix: HBM DRAM stack and base die](https://news.skhynix.com/en/sk-hynix-partners-with-tsmc-to-strengthen-hbm-technological-leadership/)
 - [Samsung: eight-layer DRAM stack example](https://semiconductor.samsung.com/news-events/news/samsung-to-advance-high-performance-computing-systems-with-launch-of-industrys-first-3rd-generation-16gb-hbm2e/)
 
-XPS는 후속 개발 범위이며 이 버전에는 포함하지 않습니다.
+XPS와 SIMS 표면 소재 쿠폰 예시는 통합 페이지의 별도 탭에서 제공합니다. SAM의 HBM 적층 내부를 해당 표면 분석 장비로 그대로 관측할 수 있다는 뜻은 아닙니다.

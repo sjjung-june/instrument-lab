@@ -19,4 +19,4 @@
 - [JEOL: secondary electron image](https://www.jeol.com/words/semterms/20121024.070958.php)
 - [JEOL: backscattered electron](https://www.jeol.com/words/emterms/20121023.083257.php)
 
-SAM(Scanning Acoustic Microscope)의 HBM 예시와 A/B/C/Through 모드는 통합 페이지의 SAM 탭에서 사용할 수 있습니다. XPS는 후속 개발 범위입니다.
+SAM의 HBM 예시와 A/B/C/Through 모드, XPS와 SIMS의 표면 분석 예시는 통합 페이지의 별도 탭에서 사용할 수 있습니다.
