@@ -20,7 +20,7 @@ export function createScene(container,config,onSelect,kind){
   if(kind==='sims')for(let row=0;row<20;row++)for(let col=0;col<20;col++)if(copperPattern(col/19,row/19))patches.push(box('sample',[.119,1,.109],0xc59462,[(col/19-.5)*2.28,1,(row/19-.5)*2.09]));
   const sourceStart=new THREE.Vector3(-2.5,3.8,-.3),sourceEnd=new THREE.Vector3(-.65,1.8,-.08);tube('source',sourceStart,sourceEnd,.35,dark);cylinder('source',.46,.46,.25,white,[-2.5,3.8,-.3]);
   const sputterStart=new THREE.Vector3(-2,2.5,1.4);tube('sputter',sputterStart,new THREE.Vector3(-.6,1.35,.5),.18,metal);tube('neutralizer',new THREE.Vector3(1.9,1.9,1.3),new THREE.Vector3(.8,1.1,.5),.14,teal);
-  let path;
+  let path,magneticPath;const variants=[];
   if(kind==='xps'){
     tube('lens',new THREE.Vector3(.5,1.3,0),new THREE.Vector3(1.6,2.2,0),.23,metal);
     const hemisphere=mesh('analyzer',new THREE.SphereGeometry(.82,40,24,0,Math.PI*2,0,Math.PI/2),white,[2.3,2.4,0]);hemisphere.rotation.z=-Math.PI/2;
@@ -29,29 +29,37 @@ export function createScene(container,config,onSelect,kind){
     path=[new THREE.Vector3(1.2,1.9,0),new THREE.Vector3(1.8,2.4,0),new THREE.Vector3(2.2,2.85,0),new THREE.Vector3(2.65,2.8,0),new THREE.Vector3(3.25,2.4,0)];
   }else{
     tube('lens',new THREE.Vector3(.4,1.3,0),new THREE.Vector3(1.3,2.25,0),.22,metal);
-    cylinder('analyzer',.29,.29,2.8,white,[1.4,3.8,0]);for(const y of [2.5,3.1,3.8,4.5,5.1])cylinder('analyzer',.34,.34,.09,teal,[1.4,y,0]);cylinder('detector',.43,.43,.25,dark,[1.4,5.4,0]);
+    const tofStart=meshes.length;cylinder('analyzer',.29,.29,2.8,white,[1.4,3.8,0]);for(const y of [2.5,3.1,3.8,4.5,5.1])cylinder('analyzer',.34,.34,.09,teal,[1.4,y,0]);cylinder('detector',.43,.43,.25,dark,[1.4,5.4,0]);for(const object of meshes.slice(tofStart))variants.push({object,technology:'tof'});
     path=[new THREE.Vector3(.8,1.8,0),new THREE.Vector3(1.4,2.4,0),new THREE.Vector3(1.4,3.8,0),new THREE.Vector3(1.4,5.25,0)];
+    magneticPath=[new THREE.Vector3(.8,1.8,0),new THREE.Vector3(1.3,2.5,0),new THREE.Vector3(1.7,2.9,0),new THREE.Vector3(2.4,3.05,0),new THREE.Vector3(3,2.6,0),new THREE.Vector3(3.3,2,0),new THREE.Vector3(3.65,1.8,0)];
+    const magneticStart=meshes.length;
+    mesh('analyzer',new THREE.TubeGeometry(new THREE.CatmullRomCurve3(magneticPath.slice(1,4)),32,.2,12,false),teal,[0,0,0]);
+    for(const side of [-.38,.38])box('analyzer',[1.5,1.3,.22],0x9f7c9d,[2.65,2.55,side]);
+    tube('analyzer',magneticPath[3],magneticPath[4],.19,white);tube('analyzer',magneticPath[4],magneticPath[5],.19,white);
+    box('analyzer',[.12,.55,.65],dark,[1.1,2.25,0]);tube('detector',magneticPath[5],magneticPath[6],.25,dark);
+    for(const object of meshes.slice(magneticStart))variants.push({object,technology:'magnetic'});
   }
   function beam(color,radius){const object=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,1,12),new THREE.MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:.9}));object.renderOrder=6;world.add(object);return object;}
   function place(object,start,end){const direction=end.clone().sub(start);object.position.copy(start).add(end).multiplyScalar(.5);object.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.clone().normalize());object.scale.y=direction.length();}
-  const incident=beam(kind==='xps'?0xe9b238:0x45a6d4,.037),etch=beam(0xf38c4f,.035),compensator=beam(0x6dbf97,.022),collection=path.map(()=>beam(0xa36cce,.029));
+  const incident=beam(kind==='xps'?0xe9b238:0x45a6d4,.037),etch=beam(0xf38c4f,.035),compensator=beam(0x6dbf97,.022),collection=Array.from({length:Math.max(path.length,magneticPath?.length||0)},()=>beam(0xa36cce,.029));
   const pulse=new THREE.Mesh(new THREE.SphereGeometry(.07,16,12),new THREE.MeshBasicMaterial({color:0xf5dcff,depthTest:false}));pulse.renderOrder=8;world.add(pulse);
   let selected='sample',focused=true,related=[],exploded=false,spread=0;
   function highlight(){for(const object of meshes){const active=object.userData.part===selected,near=related.includes(object.userData.part),dim=focused&&!active&&!near;object.material.color.copy(original.get(object));if(active&&focused)object.material.color.lerp(new THREE.Color(0x249f8b),.35);object.material.transparent=dim||glass.has(object);object.material.opacity=dim?.2:1;object.material.depthWrite=!dim;object.material.emissive.set(active&&focused?0x0b806e:near?0xab7929:0);object.material.emissiveIntensity=.2;outlines.get(object).visible=(active&&focused)||near;outlines.get(object).material.color.set(active?0x087c6b:0xc38b25);}}highlight();
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
-  renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});renderer.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes,false)[0];if(hit)onSelect(hit.object.userData.part);});
+  renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});renderer.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes.filter(object=>object.visible&&object.parent.visible),false)[0];if(hit)onSelect(hit.object.userData.part);});
   new ResizeObserver(()=>{const width=container.clientWidth,height=container.clientHeight;if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}).observe(container);
   function render(engine,delta,time){
+    const magnetic=engine.technology==='magnetic',activePath=magnetic?magneticPath:path;for(const variant of variants)variant.object.visible=variant.technology===engine.technology;groups.sputter.visible=!magnetic;
     spread=THREE.MathUtils.damp(spread,exploded?1:0,6,delta);for(const [id,group] of Object.entries(groups))group.position.set(...offsets[id]).multiplyScalar(spread);
     const oxideDepth=Math.max(0,engine.depth-(kind==='sims'?8:0)),remaining=Math.max(0,engine.thickness-oxideDepth),oxideHeight=Math.max(.006,remaining*.025),substrateDrop=Math.max(0,oxideDepth-engine.thickness)*.003;
     oxide.scale.y=oxideHeight;oxide.position.y=.79+oxideHeight/2-substrateDrop;surface.position.y=.79+oxideHeight-substrateDrop;surface.visible=engine.depth<2;
     for(const object of patches){object.scale.y=Math.max(.002,(8-engine.depth)*.02);object.position.y=.79+oxideHeight+object.scale.y/2-substrateDrop;object.visible=engine.depth<8;}
     const raster=engine.mode==='image',last=engine.rows.at(-1),coordinate=raster&&last?last:{x:kind==='sims'?.32:.5,y:.5},copperHeight=kind==='sims'&&copperPattern(coordinate.x,coordinate.y)?Math.max(0,8-engine.depth)*.02:0;
     const point=new THREE.Vector3((coordinate.x-.5)*2.28,.81+oxideHeight-substrateDrop+copperHeight,(coordinate.y-.5)*2.09);
-    const visible=engine.index>0&&!exploded&&spread<.02,etching=engine.phase==='sputter';incident.visible=visible&&!etching;etch.visible=visible&&etching;compensator.visible=visible&&!etching&&(kind==='sims'||engine.neutralizer);pulse.visible=visible&&!etching;
+    const visible=engine.index>0&&!exploded&&spread<.02,etching=engine.phase==='sputter';incident.visible=visible&&!etching;incident.material.opacity=kind==='sims'&&!magnetic&&engine.status==='scanning'?.25+.7*(Math.sin(time*.012)>0?1:0):.9;etch.visible=visible&&etching;compensator.visible=visible&&!etching&&(kind==='sims'||engine.neutralizer);pulse.visible=visible&&!etching;
     place(incident,sourceEnd,point);place(etch,sputterStart,point);place(compensator,new THREE.Vector3(.9,1.2,.55),point);
-    let start=point;for(let index=0;index<collection.length;index++){collection[index].visible=visible&&!etching;place(collection[index],start,path[index]);start=path[index];}
-    const phase=engine.status==='scanning'?(time*.001)%1:.5,segment=Math.min(path.length-1,Math.floor(phase*path.length)),from=segment?path[segment-1]:point,to=path[segment];pulse.position.lerpVectors(from,to,(phase*path.length)%1);controls.update();renderer.render(world,camera);
+    let start=point;for(let index=0;index<collection.length;index++){collection[index].visible=visible&&!etching&&index<activePath.length;if(index<activePath.length){place(collection[index],start,activePath[index]);start=activePath[index];}}
+    const phase=engine.status==='scanning'?(time*.001)%1:.5,segment=Math.min(activePath.length-1,Math.floor(phase*activePath.length)),from=segment?activePath[segment-1]:point,to=activePath[segment];pulse.position.lerpVectors(from,to,(phase*activePath.length)%1);controls.update();renderer.render(world,camera);
   }
   return {render,home,select(id){selected=id;highlight();},related(ids){related=ids;highlight();},focus(value){focused=value;highlight();},explode(value){exploded=value;}};
 }

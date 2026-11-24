@@ -1,6 +1,6 @@
 const part=(id,name,ko,role,check)=>({id,name,ko,role,check});
 export const CONFIG={
-  xps:{title:'XPS',subtitle:'X-ray Photoelectron Spectroscopy',heading:'표면의 전자에서, 화학 상태까지.',intro:'SiO₂/Si 표면 쿠폰의 합성 스펙트럼으로 원소 피크·화학 이동·대전을 비교하세요.',modes:{survey:'Survey',highres:'Si 2p 고분해능',depth:'깊이 프로파일'},parts:[
+  xps:{title:'XPS',subtitle:'X-ray Photoelectron Spectroscopy',heading:'표면의 전자에서, 화학 상태까지.',intro:'Survey · Narrow · Depth Profiling으로 SiO₂/Si 표면의 합성 신호를 비교하세요.',modes:{survey:'Survey',highres:'Narrow',depth:'Depth Profiling'},parts:[
     part('source','X-ray source','X선원 · 단색화기','Al Kα 1486.6 eV X선으로 광전자를 발생시키는 일반화 소스입니다.','출력 안정화·셔터·인터록 상태를 제조사 절차로 확인합니다.'),
     part('sample','SiO₂ / Si sample','산화막/실리콘 표면 쿠폰','가상 2–12 nm 산화막과 표면 탄소를 가진 시료입니다. SAM의 HBM 적층 내부가 아니라 표면 소재 예시입니다.','접지·시료 고정·오염·측정 위치를 확인합니다.'),
     part('lens','Electron lens','전자 수집 렌즈','광전자를 수집하고 분석기 입사 조건을 형성합니다.','렌즈 모드·시료 높이와 기준 시료의 신호를 비교합니다.'),
@@ -21,3 +21,13 @@ export const CONFIG={
     part('vacuum','Vacuum / chamber','진공 · 시료 챔버','이온 비행과 시료 환경을 유지합니다.','진공 상태·잔류가스·탈가스와 로드록 이력을 확인합니다.')],
     guides:[{id:'mass',name:'질량 피크가 이동하거나 겹침',parts:['analyzer','lens','neutralizer'],steps:['극성과 질량 교정·기준 피크를 확인합니다.','대전·시간 기준·분해능과 동중질량 간섭을 검토합니다.','단일 명목 m/z만으로 원소·분자를 확정하지 않습니다.']},{id:'matrix',name:'신호가 농도와 비례하지 않음',parts:['sample','source','sputter'],steps:['매트릭스·1차 이온·극성에 따른 이온화 수율 차이를 고려합니다.','적절한 기준 시료와 RSF·검출기 응답을 확인합니다.','임의 강도를 농도로 바로 환산하지 않습니다.']},{id:'depth',name:'계면이 넓거나 깊이가 다름',parts:['sputter','sample','lens'],steps:['크레이터 깊이와 제거율 교정을 확인합니다.','혼합·거칠기·크레이터 가장자리 영향을 비교합니다.','명목 깊이와 측정 깊이를 구분하고 별도 표면 측정으로 확인합니다.']}]}
 };
+export function simsConfig(technology){
+  const base=CONFIG.sims;if(technology==='tof')return {...base,heading:'ToF-SIMS · 펄스에서 비행시간까지.'};
+  const replacements={
+    source:part('source','Continuous primary ion gun','연속 1차 이온총','연속 1차 이온빔으로 표면을 스퍼터하며 이차이온을 생성합니다. 깊이 모드에서 제거와 분석이 동시에 진행됩니다.','빔 전류 안정성·선량·주사 면적·기준 시료를 확인합니다.'),
+    lens:part('lens','Secondary ion extraction','이차이온 추출 렌즈','선택 극성의 이온을 에너지 필터와 자기 섹터로 수집합니다.','추출 전압·극성·입사 슬릿·정렬과 기준 신호를 확인합니다.'),
+    analyzer:part('analyzer','ESA + magnetic sector','정전 에너지 필터 · 자기 섹터','정전 섹터로 에너지 범위를 선택한 뒤 자기 섹터로 m/z를 분리하는 이중 집속 개념입니다. 단일 수집기 예시이며 다중 수집기 장비도 있습니다.','기준 질량·자장 안정성·에너지 창·슬릿·질량 간섭을 확인합니다.'),
+    detector:part('detector','Selected-mass collector','선택 질량 수집기','스펙트럼은 자장 스윕, 이미지는 선택 질량, 깊이는 세 질량을 순차 전환한 한 사이클의 합성값을 표시합니다.','검출기 범위·포화·데드타임·질량 전환 후 안정화를 확인합니다.'),
+    sputter:part('sputter','Auxiliary gun (inactive)','보조 이온총 · 이 예시 비활성','이 모델의 M-SIMS 제거는 연속 1차 이온총이 담당합니다. 별도 제거/분석 교대는 사용하지 않습니다.','제거율·크레이터는 1차 빔 조건과 함께 확인합니다. 보조 총 사용은 장비별로 다릅니다.')};
+  return {...base,subtitle:'Magnetic-sector Secondary Ion Mass Spectrometry',heading:'M-SIMS · 연속 빔에서 질량 선택까지.',intro:'자기 섹터형 SIMS: 같은 가상 쿠폰을 연속 스퍼터·질량 선택·깊이 프로파일로 비교하세요.',modes:{spectrum:'자장 스윕 스펙트럼',image:'선택 질량 이미지',depth:'연속 깊이 프로파일'},parts:base.parts.map(item=>replacements[item.id]||item),guides:base.guides.map(guide=>guide.id==='mass'?{...guide,steps:['에너지 창·입출사 슬릿·기준 질량을 확인합니다.','자장·가속 전압 안정성과 대전·동중질량 간섭을 검토합니다.','단일 명목 m/z만으로 원소·분자를 확정하지 않습니다.']}:guide.id==='depth'?{...guide,parts:['source','sample','lens']}:guide.id==='matrix'?{...guide,parts:['sample','source','detector']}:guide)};
+}

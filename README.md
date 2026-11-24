@@ -1,6 +1,6 @@
 # Instrument Lab — AFM · FIB · TEM · XRD · SEM · SAM · XPS · SIMS
 
-제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 상단의 AFM/FIB/TEM/XRD/SEM/SAM/XPS/SIMS 버튼으로 한 화면에서 8종 장비를 전환할 수 있습니다. AFM은 XY 스테이지·Z 피드백, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, 독립 SEM은 SE·BSE 검출과 래스터 영상 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층 샘플의 A/B/C/Through 모드, XPS는 Survey·Si 2p·명목 깊이별 응답, SIMS는 ToF 질량 스펙트럼·이온 이미지·명목 깊이별 응답을 제공합니다. 모든 데이터는 교육용 합성값입니다.
+제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 상단의 AFM/FIB/TEM/XRD/SEM/SAM/XPS/SIMS 버튼으로 한 화면에서 8종 장비를 전환할 수 있습니다. AFM은 XY 스테이지·Z 피드백, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, SEM은 SE·BSE 검출과 래스터 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층의 A/B/C/Through 모드, XPS는 Survey·Narrow·Depth Profiling, SIMS는 M-SIMS(자기 섹터형)와 ToF-SIMS(비행시간형)의 질량·이미지·깊이 분석을 제공합니다. 모든 데이터는 교육용 합성값입니다.
 
 ## 가장 간단한 실행
 
@@ -35,8 +35,9 @@ node serve.mjs
 
 ## 확장 모드 사용
 
-- XPS → Survey/Si 2p: SiO₂/Si 표면 쿠폰에서 원소 피크와 산화물·기판 응답을 비교합니다. 산화막·대전·중화·고분해능 패스 에너지를 바꾸고 다시 취득하세요. 깊이 모드는 가상 0–30 nm 제거/분석 교대입니다.
-- SIMS → Static 질량/이온 이미지: 양/음 극성과 Cu/Si/O/C/B 선택 채널에 따라 스펙트럼·분포가 바뀝니다. 가상 Cu 패턴/SiO₂/Si와 B 분포를 사용하며 HBM 적층 전체의 검사 모델은 아닙니다. 깊이 모드는 가상 0–80 nm 제거/분석 교대입니다.
+- XPS → Survey / Narrow / Depth Profiling: Survey에서 넓은 에너지 범위를 보고, Narrow에서 Si 2p·C 1s·O 1s를 선택합니다. 산화막·대전·중화·패스 에너지를 바꾸고 재취득하세요. Depth Profiling은 가상 0–30 nm 제거/분석 교대입니다.
+- SIMS → 분석기 방식: M-SIMS는 연속 빔·정전 에너지 필터·자기 섹터 및 선택 질량 수집, ToF-SIMS는 펄스 빔·비행시간 분석을 표시합니다. 방식 전환 시 3D 분석기·신호 경로·부품 설명·가이드·CSV 메타데이터도 바뀝니다.
+- 두 SIMS 방식 모두 스펙트럼·64×64 이미지·0–80 nm 명목 깊이 모드를 제공합니다. M-SIMS는 연속 제거/분석과 단일 수집기의 질량 순차 전환을, ToF-SIMS 깊이는 별도 제거 빔과 분석 펄스 교대를 모사합니다. Cu/SiO₂/Si·B 합성 쿠폰이며 HBM 내부 검사나 장비 간 성능 비교가 아닙니다.
 - XPS/SIMS의 초기화·조건 변경·재취득은 새 가상 시료로 교체하는 동작입니다. 실제 스퍼터는 파괴적이며 되돌릴 수 없습니다. 깊이·수율·피크 강도는 정량 농도나 실제 제거율이 아닙니다. 상세 가정과 CSV 축 단위는 `spectroscopy-source/README.md`를 참조하세요.
 
 - SAM → HBM 예시: 기본 샘플은 8단 DRAM/접합층·베이스 다이·인터포저와 가상 박리/보이드입니다. 정상 샘플이나 한 종류 결함만 있는 샘플과 비교할 수 있습니다.
