@@ -1,6 +1,6 @@
-# Instrument Lab — AFM · FIB · TEM · XRD · SEM
+# Instrument Lab — AFM · FIB · TEM · XRD · SEM · SAM
 
-제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 상단의 AFM/FIB/TEM/XRD/SEM 버튼으로 한 화면에서 장비를 전환할 수 있습니다. AFM은 XY 스테이지·Z 피드백, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, 독립 SEM은 SE·BSE 검출과 래스터 영상 취득을 시뮬레이션합니다. SAM(Scanning Acoustic Microscope) 모드별 모델과 XPS는 다음 개발 단계입니다.
+제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 상단의 AFM/FIB/TEM/XRD/SEM/SAM 버튼으로 한 화면에서 장비를 전환할 수 있습니다. AFM은 XY 스테이지·Z 피드백, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, 독립 SEM은 SE·BSE 검출과 래스터 영상 취득을 시뮬레이션합니다. SAM(Scanning Acoustic Microscope)은 HBM 8단 적층 샘플로 A/B/C/Through 모드를 제공합니다. XPS는 다음 개발 단계입니다.
 
 ## 가장 간단한 실행
 
@@ -31,9 +31,13 @@ node serve.mjs
 
 `npm ci`에는 최초 네트워크 연결이 필요합니다. Three.js는 빌드에 포함됩니다. Google Fonts를 받을 수 없으면 시스템 글꼴로 자동 표시되며, 시뮬레이션은 네트워크 없이 동작합니다. WebGL 2를 지원하는 브라우저가 필요합니다. 실행 서버는 기본적으로 내 컴퓨터에서만 접근할 수 있습니다.
 
-`npm run build`는 `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 네 모델을 먼저 빌드합니다. 모델 코드 수정 후에는 각각 `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`을 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 화면을 바꿔도 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. SEM은 브라우저 문서가 숨겨질 때 일시정지합니다.
+`npm run build`는 `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`, `sam-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 다섯 모델을 먼저 빌드합니다. 모델 코드 수정 후에는 각각 `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`, `npm run build:sam`을 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 장비 탭만 전환하면 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. SEM/SAM은 브라우저 문서가 숨겨질 때 일시정지합니다.
 
 ## 확장 모드 사용
+
+- SAM → HBM 예시: 기본 샘플은 8단 DRAM/접합층·베이스 다이·인터포저와 가상 박리/보이드입니다. 정상 샘플이나 한 종류 결함만 있는 샘플과 비교할 수 있습니다.
+- SAM → C-Scan: 260 μm 게이트로 중간 박리를, 590 μm 게이트로 하부 보이드를 취득합니다. A-Scan의 반사 시간, B-Scan의 단면, Through-Scan의 깊이 투영과 연결해 관찰합니다.
+- SAM의 깊이·음속·치수·RF 파형은 임의 합성입니다. 특정 HBM 세대나 제품의 구조·검사 성능을 재현하지 않으며 개별 TSV/범프 검출 및 합격 판정에 사용할 수 없습니다. 자세한 가정은 `sam-source/README.md`를 참조하세요.
 
 - SEM → SE/BSE: 같은 시료를 표면 형상/상대 조성 신호로 취득합니다. 3D 입사빔·검출·취득 경로와 마지막 취득 좌표가 연동됩니다. 시료 스테이지는 고정입니다.
 - SEM → 초점 흐림: 0–100%를 조절하고 재취득하면 합성 공간 평균 효과가 반영됩니다. 모드나 흐림 변경은 취득을 초기화합니다. CSV에는 취득한 픽셀만 저장합니다.
