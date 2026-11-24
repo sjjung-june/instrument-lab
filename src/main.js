@@ -1,11 +1,13 @@
 import './style.css';
+import './equipment.css';
 import { ScanEngine, PARTS, GUIDES } from './simulation.js';
 import { createScene } from './scene.js';
 
 const byId=id=>document.getElementById(id);
 const engine=new ScanEngine();let selected='probe';let mapChannel='trace';let scene;let toastTimer;let activeGuide='noise';
-function selectEquipment(equipment){for(const [id,button] of [['afm','selectAfm'],['fib','selectFib'],['tem','selectTem']]){const active=id===equipment;byId(id+'Workspace').hidden=!active;byId(button).setAttribute('aria-pressed',String(active));if(active&&id!=='afm'){const frame=byId(id+'Frame');if(!frame.getAttribute('src'))frame.src=frame.dataset.src;}}document.title=equipment.toUpperCase()+' Lab — Instrument Explorer';if(equipment!=='afm'){byId('aboutDialog').close();if(!byId('maintenanceDrawer').hidden)setDrawer(false);}window.scrollTo({top:0,behavior:'instant'});}
-byId('selectAfm').onclick=()=>selectEquipment('afm');byId('selectFib').onclick=()=>selectEquipment('fib');byId('selectTem').onclick=()=>selectEquipment('tem');
+function selectEquipment(equipment){for(const [id,button] of [['afm','selectAfm'],['fib','selectFib'],['tem','selectTem'],['xrd','selectXrd']]){const active=id===equipment;byId(id+'Workspace').hidden=!active;byId(button).setAttribute('aria-pressed',String(active));if(active&&id!=='afm'){const frame=byId(id+'Frame');if(!frame.getAttribute('src'))frame.src=frame.dataset.src;}}document.title=equipment.toUpperCase()+' Lab — Instrument Explorer';if(equipment!=='afm'){byId('aboutDialog').close();if(!byId('maintenanceDrawer').hidden)setDrawer(false);}window.scrollTo({top:0,behavior:'instant'});}
+byId('selectAfm').onclick=()=>selectEquipment('afm');byId('selectFib').onclick=()=>selectEquipment('fib');byId('selectTem').onclick=()=>selectEquipment('tem');byId('selectXrd').onclick=()=>selectEquipment('xrd');
+new ResizeObserver(entries=>{const height=entries[0].target.getBoundingClientRect().height;document.documentElement.style.setProperty('--equipment-nav-height',height+'px');}).observe(document.querySelector('.equipment-switch'));
 const statuses={idle:'대기',approaching:'팁 접근 중',scanning:'스캔 중',paused:'일시정지',retracting:'후퇴 중',retracted:'후퇴 완료',complete:'스캔 완료'};
 function toast(message){byId('toast').textContent=message;byId('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>byId('toast').hidden=true,3000);}
 function selectPart(id){selected=id;const part=PARTS.find(item=>item.id===id);scene?.select(id);byId('sceneSelected').textContent=part.name;byId('partName').textContent=part.name;byId('partKo').textContent=part.ko;byId('partDescription').textContent=part.role;byId('partCheck').textContent='점검 포인트 · '+part.check;byId('partNumber').textContent=`${String(PARTS.indexOf(part)+1).padStart(2,'0')} / 09`;byId('hidePartButton').textContent=scene&&!scene.visible(id)?'선택 파트 표시하기':'선택 파트 숨기기';document.querySelectorAll('.part-button').forEach(button=>button.classList.toggle('active',button.dataset.id===id));}
