@@ -1,6 +1,29 @@
-# Instrument Lab — AFM · APT · FIB · SAM · SEM · SIMS · TEM · XPS · XRD
+# Instrument Lab — 14 Instrument Workspaces
 
-제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 장비 메뉴는 알파벳순 **AFM / APT / FIB / SAM / SEM / SIMS / TEM / XPS / XRD**이며 한 페이지에서 9종을 전환합니다. AFM은 XY 스테이지·Z 피드백, APT는 펄스 전계 증발·TOF·검출 XY·3D 점군, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, SEM은 SE·BSE 검출과 래스터 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층의 A/B/C/Through 모드, XPS는 Survey·Narrow·Depth Profiling, SIMS는 M-SIMS(자기 섹터형)와 ToF-SIMS(비행시간형)의 질량·이미지·깊이 분석을 제공합니다. 모든 데이터는 교육용 합성값입니다.
+제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 장비 메뉴는 알파벳순 **AFM / AFM-IR / APT / FIB / FTIR / Nanoindenter / Raman / SAM / SEM / SIMS / TEM / XPS / XRD / XRM**이며 한 페이지에서 14종을 전환합니다. AFM은 XY 스테이지·Z 피드백, APT는 펄스 전계 증발·TOF·검출 XY·3D 점군, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR, SEM은 SE·BSE, SAM은 HBM A/B/C/Through, XPS는 Survey·Narrow·Depth, SIMS는 M-SIMS/ToF-SIMS를 제공합니다. XRM은 투영/단면 CT, Nanoindenter는 하중–변위, Raman·AFM-IR은 스펙트럼/화학 맵, FTIR은 배경/투과/ATR와 간섭신호 변환을 제공합니다. 모든 데이터는 교육용 합성값입니다.
+
+## 신규 5종 사용법과 입력–출력 연결
+
+5종은 `multimodal-source/`의 별도 HTML 진입점과 공유 UI/엔진을 사용합니다. 기기별 3D 메쉬·측정식·상태·출력은 구분합니다. 공통 시점/메쉬 클릭/선택 강조/분해/0.1–2× 재생 속도/명시적 측정 시작·정지·재개/조건 변경 초기화/CSV/관련 파트 유지보수 가이드를 제공합니다. 문서가 숨겨질 때 일시정지하며 장비 탭 왕복은 상태를 유지합니다.
+
+| 장비 | 동작 및 출력 | 범위와 주의 |
+| --- | --- | --- |
+| XRM | Radiography 한 각도 투과율 / CT 48각도 투영 → 로그 흡수 sinogram → 필터 역투영(FBP) 단면 | 각도 이동 중 X선 OFF, 정지 노출 후 기록. 투과율은 동일 팬텀 선적분에서 exp(−∫μdl)로 계산. 단순히 정답 이미지를 표시하지 않음. |
+| Nanoindenter | 접근 → 하중 인가 → 유지 → 제하 → 후퇴, P–h/하중–시간 곡선·잔류 압흔 | 합성 벌크 Si/Cu/polymer 유사 재료, 200–2000 μN. 제하 종료 후 이상식 H/Eᵣ 표시. 초기화는 새 쿠폰. |
+| Raman | 532/785 nm 연속 여기 → Rayleigh 차단 → 분광 CCD 전 채널 적분 / 32×32 선택 shift 맵 | 파장을 바꿔도 Raman shift는 유지되고 검출 Stokes 파장은 변함. 8회 동시 채널 누적. 화학 맵은 선택 shift의 산란 응답이며 농도가 아님. |
+| FTIR | Background → Transmission 또는 ATR → OPD 간섭신호 256점 → 실제 DFT → 샘플/배경 비 → A/T | 광대역 동시 조사이며 파수를 한 개씩 스캔하지 않음. 액세서리별 배경 필수. ATR 선택 후 Background를 취득하면 빈 ATR 경로의 배경이 됨. |
+| AFM-IR | 가변 IR 펄스 → 열팽창 → 접촉 캔틸레버 감쇠 진동 → 별도 가시광 레버 검출 → 국소 스펙트럼/32×32 맵 | IR 조사와 광학 읽기를 분리. 펄스 OFF 후 진동이 남고 응답 기록은 진동 이후. 지도는 대표 주기당 독립 위치 16개 묶음. 지형과 화학 응답은 다른 함수. |
+
+### 계산·단위·한계
+
+- **XRM:** 정규화 팬텀의 원형 영역 3개를 해석적으로 선적분합니다. 48채널, 각도 0–176.25°(3.75° 간격)의 평행빔 투영에 Ram–Lak 이산 필터와 선형 보간 역투영을 적용합니다. 미취득 투영은 비워두며 초기 제한 각도 단면에 줄무늬가 보일 수 있습니다. 3D 장비 메쉬의 검출판은 선택한 한 행을 대표합니다. **완전한 3D CT·cone-beam·위상 대비 XRM이 아닙니다.** 재구성 좌표/흡수계수는 무차원 합성값이며 실제 HBM 결함 판정이 아닙니다. CSV는 원시 투영의 각도·정규화 검출 위치·로그 흡수·투과율을 저장합니다.
+- **Nanoindenter:** 이상적 Berkovich 면적 `A=24.5h_c²`, 제하 `P=Pmax[(h−hf)/(hmax−hf)]^1.5`, `hf=0.6hmax`, `S=1.5Pmax/(hmax−hf)`, `hc=hmax−0.75Pmax/S`, `H=Pmax/A`, `Er=√π S/(2β√A)`, `β=1.034`를 사용합니다. P는 μN, h는 nm로 생성하고 GPa 계산 시 단위를 변환합니다. 재료별 합성 경도 12/3/0.25 GPa로 곡선을 생성한 후 재계산하므로 **독립 검증이나 실측 물성값이 아닙니다.** Eᵣ는 reduced modulus이며 Young 탄성률과 구분합니다. 크리프·pile-up·기판·팁 교정·열 드리프트는 생략합니다.
+- **Raman:** Si 유사 520 cm⁻¹ 및 가상 폴리머 1000/1600/2900 cm⁻¹ Gaussian 피크입니다. `1/λStokes=1/λlaser−shift`, 여기 파장에 따른 λ⁻⁴ 응답 스케일은 단순 근사입니다. 256채널을 8단계 동시 적분하며 순차 파수 스캔이 아닙니다. 실제 분광 분해능·공명·형광·손상·편광·계수 통계는 계산하지 않습니다. 맵은 독립 위치 적분의 시간 압축 표현입니다.
+- **FTIR:** 동일 단일 빔 스펙트럼으로 cosine 합성한 256점 간섭신호를 실제 DFT로 복원합니다. Δ파수=32 cm⁻¹, OPD 간격 `1/(256×32) cm`, 최대 OPD 약 311.3 μm, 거울 이동 약 155.6 μm입니다. 600–3600 cm⁻¹ 범위의 격자점을 표시합니다. `T=Ssample/Sbackground`, `A=−log10(T)`이며 배경을 빼는 모델이 아닙니다. 미완료 간섭신호에서 흡광도를 만들지 않습니다. 배경은 Transmission/ATR별 별도 유지·삭제하며 동일 빈 광학 경로라는 가정에서만 재사용합니다. ATR은 파수·접촉 가중치 근사이고 Fresnel·굴절률·침투 깊이·실제 ATR 보정은 생략합니다. 잡음·위상 보정·apodization·실제 분해능 교정은 생략합니다.
+- **AFM-IR:** 900–1900 cm⁻¹ 국소 스펙트럼 64점 또는 32×32 맵. 독립적인 두 폴리머 유사 IR 밴드 혼합에 기계응답 가중치를 적용합니다. 대표 감쇠 진동은 `a exp(−4t) sin(2π6t)`이며 t는 정규화된 교육 시간이지 실제 ms/공진 주파수가 아닙니다. 지도 주기는 16개 독립 위치의 여러 실제 펄스를 압축한 대표 장면입니다. 별도 가시광 레버는 정렬/읽기를 위해 대기에도 표시합니다. 이는 photothermal 접촉 AFM-IR 개념이며 특정 RE/PLL·tapping·s-SNOM 장비를 재현하지 않습니다. 열·기계·두께·출력 정규화 영향 때문에 응답을 곧바로 흡수 계수/농도로 해석할 수 없습니다.
+- 모든 샘플은 독립 합성 예시입니다. XRM의 패키지 단면, 압입 쿠폰, Raman/IR 폴리머 도메인은 같은 실제 HBM을 모든 기법으로 그대로 관측한다는 뜻이 아닙니다. 모든 형상·광학 경로·변위는 확대된 개념 메쉬이고 정량 광선/열/접촉 역학 계산이 아닙니다.
+
+원리 대조: [ZEISS XRM](https://www.zeiss.com/microscopy/en/products/software/advanced-reconstruction-toolbox.html), [Oliver–Pharr 원 논문](https://web.mit.edu/cortiz/www/3.052/3.052CourseReader/45_OliverPharr1992Nanoindentation.pdf), [HORIBA Raman](https://www.horiba.com/int/scientific/technologies/raman-imaging-and-spectroscopy/raman-spectrometer-presentation/), [Thermo Fisher FTIR](https://www.thermofisher.com/us/en/home/industrial/spectroscopy-elemental-isotope-analysis/molecular-spectroscopy/fourier-transform-infrared-spectroscopy/faqs.html), [Shimadzu FT/배경](https://www.ssi.shimadzu.com/service-support/technical-support/analysis-basics/tips-ftir/apodization.html), [Bruker AFM-IR](https://www.bruker.com/en/products-and-solutions/infrared-and-raman/nanoscale-infrared-spectrometers/re-afm-ir.html).
 
 ## 입력–출력 개연성 점검 · 2026-11-25
 
@@ -61,7 +84,7 @@ node serve.mjs
 
 `npm ci`에는 최초 네트워크 연결이 필요합니다. Three.js는 빌드에 포함됩니다. Google Fonts를 받을 수 없으면 시스템 글꼴로 자동 표시되며, 시뮬레이션은 네트워크 없이 동작합니다. WebGL 2를 지원하는 브라우저가 필요합니다. 실행 서버는 기본적으로 내 컴퓨터에서만 접근할 수 있습니다.
 
-`npm run build`는 `apt-source/`, `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`, `sam-source/`, `spectroscopy-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 하위 모델을 먼저 빌드합니다. 수정 후에는 각각 `npm run build:apt`, `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`, `npm run build:sam`, `npm run build:spectroscopy`를 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. XPS/SIMS는 마지막 공통 빌드를 사용합니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 장비 탭만 전환하면 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. APT/SEM/SAM/XPS/SIMS는 브라우저 문서가 숨겨질 때 일시정지합니다.
+`npm run build`는 `apt-source/`, `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`, `sam-source/`, `spectroscopy-source/`, `multimodal-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 하위 모델을 먼저 빌드합니다. 수정 후에는 각각 `npm run build:apt`, `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`, `npm run build:sam`, `npm run build:spectroscopy`, `npm run build:multimodal`을 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. XPS/SIMS는 마지막 공통 빌드를 사용합니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 장비 탭만 전환하면 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. APT/SEM/SAM/XPS/SIMS와 신규 5종은 브라우저 문서가 숨겨질 때 일시정지합니다.
 
 ## 확장 모드 사용
 

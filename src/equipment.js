@@ -1,1 +1,1 @@
-export const EQUIPMENT=['AFM','APT','FIB','SAM','SEM','SIMS','TEM','XPS','XRD'].map(name=>({name,id:name.toLowerCase(),button:'select'+name[0]+name.slice(1).toLowerCase()}));
+export const EQUIPMENT=['AFM','AFM-IR','APT','FIB','FTIR','Nanoindenter','Raman','SAM','SEM','SIMS','TEM','XPS','XRD','XRM'].map(name=>{const id=name.toLowerCase().replaceAll('-','');return {name,id,button:'select'+id[0].toUpperCase()+id.slice(1)};});

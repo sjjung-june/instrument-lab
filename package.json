@@ -9,7 +9,8 @@
     "build:sem":"vite build sem-source --base=./ --outDir ../public/sem --emptyOutDir",
     "build:sam":"vite build sam-source --base=./ --outDir ../public/sam --emptyOutDir",
     "build:spectroscopy":"vite build spectroscopy-source --base=./ --outDir ../public/spectroscopy --emptyOutDir",
-    "build:models":"npm run build:apt && npm run build:fib && npm run build:tem && npm run build:xrd && npm run build:sem && npm run build:sam && npm run build:spectroscopy",
+    "build:multimodal":"vite build multimodal-source --base=./ --outDir ../public/multimodal --emptyOutDir",
+    "build:models":"npm run build:apt && npm run build:fib && npm run build:tem && npm run build:xrd && npm run build:sem && npm run build:sam && npm run build:spectroscopy && npm run build:multimodal",
     "build":"npm run build:models && vite build",
     "preview":"vite preview --host 127.0.0.1","serve":"node serve.mjs",
     "test":"node --test tests/*.test.js apt-source/tests/*.test.js fib-source/tests/*.test.js tem-source/tests/*.test.js xrd-source/tests/*.test.js sem-source/tests/*.test.js sam-source/tests/*.test.js spectroscopy-source/tests/*.test.js"
