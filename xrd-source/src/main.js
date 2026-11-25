@@ -24,4 +24,4 @@ function update(){
 }
 let lastDraw=0;function loop(now){const delta=playbackClock.step(now);sim.tick(delta);scene?.render(sim,playbackClock.realDelta);if(now-lastDraw>80){draw();update();lastDraw=now;}requestAnimationFrame(loop);}document.addEventListener('visibilitychange',()=>playbackClock.resetTimestamp());draw();update();requestAnimationFrame(loop);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind:'xrd',engine:sim,parts:PARTS,selectPart:select});

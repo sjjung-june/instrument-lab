@@ -61,4 +61,4 @@ function animate(now){const delta=playbackClock.step(now);engine.tick(delta);sce
 document.addEventListener('visibilitychange',()=>{playbackClock.resetTimestamp();});
 drawData();updateUI();requestAnimationFrame(animate);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind:'afm',engine,parts:PARTS,selectPart});

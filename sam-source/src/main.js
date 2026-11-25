@@ -44,4 +44,4 @@ update();draw();let lastDraw=0,lastIndex=-1;
 function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if(engine.index!==lastIndex&&time-lastDraw>60){draw();update();lastDraw=time;lastIndex=engine.index;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);requestAnimationFrame(animate);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind:'sam',engine,parts:PARTS,selectPart});

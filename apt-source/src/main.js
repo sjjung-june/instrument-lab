@@ -47,4 +47,4 @@ update();let lastIndex=-1,lastUpdate=0;
 function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if((engine.index!==lastIndex||engine.status==='scanning')&&time-lastUpdate>80){update();lastIndex=engine.index;lastUpdate=time;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);if(view==='reconstruction')reconstruction?.render(engine,filter);requestAnimationFrame(animate);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind:'apt',engine,parts:PARTS,selectPart});

@@ -59,4 +59,4 @@ function animate(time){const delta=playbackClock.step(time);engine.tick(delta);i
 document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});
 requestAnimationFrame(animate);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind:'sem',engine,parts:PARTS,selectPart});

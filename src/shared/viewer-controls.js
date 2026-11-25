@@ -1,7 +1,8 @@
 import './viewer-controls.css';
 import {PLAYBACK_RATES} from './playback.js';
+import {mountLearningLab} from './learning-panel.js';
 
-export function mountViewerControls(scene,clock){
+export function mountViewerControls(scene,clock,learning){
   const home=document.querySelector('#homeButton,#resetCamera,#resetView'),explode=document.querySelector('#explodeButton,#explode');
   if(!home||!explode)throw new Error('Viewer toolbar missing');
   home.textContent='시점 초기화';home.setAttribute('aria-label','시점 초기화');home.onclick=()=>scene?.home();
@@ -17,4 +18,5 @@ export function mountViewerControls(scene,clock){
   const note=document.createElement('span');note.textContent='선택 녹색 · 관련 황색 · 속도 변경 시 취득 데이터 유지';label.append(select);strip.append(label,note);
   document.getElementById('scene').before(strip);
   document.addEventListener('visibilitychange',()=>clock.resetTimestamp());
+  if(learning)mountLearningLab({...learning,scene},strip);
 }

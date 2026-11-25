@@ -62,4 +62,4 @@ populateSpecies();update();draw();let lastDraw=0,lastIndex=-1,lastPhase='';
 function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if((engine.index!==lastIndex||engine.phase!==lastPhase)&&time-lastDraw>60){update();draw();lastDraw=time;lastIndex=engine.index;lastPhase=engine.phase;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);requestAnimationFrame(animate);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
 
-mountViewerControls(scene,playbackClock);
+mountViewerControls(scene,playbackClock,{kind,engine,parts:()=>config.parts,selectPart});
