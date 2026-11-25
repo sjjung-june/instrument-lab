@@ -1,6 +1,6 @@
-# Instrument Lab — AFM · FIB · TEM · XRD · SEM · SAM · XPS · SIMS
+# Instrument Lab — AFM · APT · FIB · SAM · SEM · SIMS · TEM · XPS · XRD
 
-제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 상단의 AFM/FIB/TEM/XRD/SEM/SAM/XPS/SIMS 버튼으로 한 화면에서 8종 장비를 전환할 수 있습니다. AFM은 XY 스테이지·Z 피드백, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, SEM은 SE·BSE 검출과 래스터 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층의 A/B/C/Through 모드, XPS는 Survey·Narrow·Depth Profiling, SIMS는 M-SIMS(자기 섹터형)와 ToF-SIMS(비행시간형)의 질량·이미지·깊이 분석을 제공합니다. 모든 데이터는 교육용 합성값입니다.
+제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 장비 메뉴는 알파벳순 **AFM / APT / FIB / SAM / SEM / SIMS / TEM / XPS / XRD**이며 한 페이지에서 9종을 전환합니다. AFM은 XY 스테이지·Z 피드백, APT는 펄스 전계 증발·TOF·검출 XY·3D 점군, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, SEM은 SE·BSE 검출과 래스터 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층의 A/B/C/Through 모드, XPS는 Survey·Narrow·Depth Profiling, SIMS는 M-SIMS(자기 섹터형)와 ToF-SIMS(비행시간형)의 질량·이미지·깊이 분석을 제공합니다. 모든 데이터는 교육용 합성값입니다.
 
 ## 가장 간단한 실행
 
@@ -31,10 +31,11 @@ node serve.mjs
 
 `npm ci`에는 최초 네트워크 연결이 필요합니다. Three.js는 빌드에 포함됩니다. Google Fonts를 받을 수 없으면 시스템 글꼴로 자동 표시되며, 시뮬레이션은 네트워크 없이 동작합니다. WebGL 2를 지원하는 브라우저가 필요합니다. 실행 서버는 기본적으로 내 컴퓨터에서만 접근할 수 있습니다.
 
-`npm run build`는 `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`, `sam-source/`, `spectroscopy-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 하위 모델을 먼저 빌드합니다. 수정 후에는 각각 `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`, `npm run build:sam`, `npm run build:spectroscopy`를 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. XPS/SIMS는 마지막 공통 빌드를 사용합니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 장비 탭만 전환하면 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. SEM/SAM/XPS/SIMS는 브라우저 문서가 숨겨질 때 일시정지합니다.
+`npm run build`는 `apt-source/`, `fib-source/`, `tem-source/`, `xrd-source/`, `sem-source/`, `sam-source/`, `spectroscopy-source/`를 먼저 빌드하고 AFM 화면과 함께 `dist/`에 묶습니다. `npm run dev`도 하위 모델을 먼저 빌드합니다. 수정 후에는 각각 `npm run build:apt`, `npm run build:fib`, `npm run build:tem`, `npm run build:xrd`, `npm run build:sem`, `npm run build:sam`, `npm run build:spectroscopy`를 실행하고 해당 모델 화면을 새로고침해야 반영됩니다. XPS/SIMS는 마지막 공통 빌드를 사용합니다. 전환 시 각 세션은 페이지를 새로고침할 때까지 유지됩니다. 장비 탭만 전환하면 실행 중인 시뮬레이션은 자동으로 일시정지하지 않습니다. APT/SEM/SAM/XPS/SIMS는 브라우저 문서가 숨겨질 때 일시정지합니다.
 
 ## 확장 모드 사용
 
+- APT → Laser-pulsed / Voltage-pulsed: 니들형 합성 시료에서 4,096개 이온 이벤트를 취득합니다. TOF·질량 스펙트럼·XY 히트맵·회전 가능한 3D 점군을 함께 누적합니다. 전하 상태 1+/2+와 유효 가속전압 가정에 따른 m/z·비행시간 변화를 비교하고 Si/Cu/B 표시 필터로 층을 확인하세요. 실제 물리 재구성·정량이 아닌 개념 모델입니다. `apt-source/README.md`에 가정·CSV 단위·한계를 설명했습니다.
 - XPS → Survey / Narrow / Depth Profiling: Survey에서 넓은 에너지 범위를 보고, Narrow에서 Si 2p·C 1s·O 1s를 선택합니다. 산화막·대전·중화·패스 에너지를 바꾸고 재취득하세요. Depth Profiling은 가상 0–30 nm 제거/분석 교대입니다.
 - SIMS → 분석기 방식: M-SIMS는 연속 빔·정전 에너지 필터·자기 섹터 및 선택 질량 수집, ToF-SIMS는 펄스 빔·비행시간 분석을 표시합니다. 방식 전환 시 3D 분석기·신호 경로·부품 설명·가이드·CSV 메타데이터도 바뀝니다.
 - 두 SIMS 방식 모두 스펙트럼·64×64 이미지·0–80 nm 명목 깊이 모드를 제공합니다. M-SIMS는 연속 제거/분석과 단일 수집기의 질량 순차 전환을, ToF-SIMS 깊이는 별도 제거 빔과 분석 펄스 교대를 모사합니다. Cu/SiO₂/Si·B 합성 쿠폰이며 HBM 내부 검사나 장비 간 성능 비교가 아닙니다.

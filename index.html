@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f5f5f7"><title>AFM Lab — Interactive Maintenance</title><meta name="description" content="일반화된 AFM을 탐색하고 광학 검출, Z 피드백과 왕복 스캔을 실험하는 3D 유지보수 교육 공간."></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f5f5f7"><title>Instrument Lab — 3D Maintenance Explorer</title><meta name="description" content="AFM·APT·FIB·SAM·SEM·SIMS·TEM·XPS·XRD의 구조, 신호와 유지보수를 탐색하는 인터랙티브 3D 교육 공간."></head>
 <body>
 <nav class="equipment-switch" aria-label="장비 선택"><div class="switch-brand">INSTRUMENT LAB <span>장비 탐색</span></div><div class="equipment-buttons">
 <button id="selectAfm" type="button" aria-pressed="true" aria-controls="afmWorkspace">AFM <small>원자힘</small></button>
+<button id="selectApt" type="button" aria-pressed="false" aria-controls="aptWorkspace">APT <small>원자 탐침</small></button>
 <button id="selectFib" type="button" aria-pressed="false" aria-controls="fibWorkspace">FIB <small>집속 이온빔</small></button>
-<button id="selectTem" type="button" aria-pressed="false" aria-controls="temWorkspace">TEM <small>BF · DF · STEM · EELS</small></button>
-<button id="selectXrd" type="button" aria-pressed="false" aria-controls="xrdWorkspace">XRD <small>In · Out · XRR</small></button>
-<button id="selectSem" type="button" aria-pressed="false" aria-controls="semWorkspace">SEM <small>SE · BSE</small></button>
 <button id="selectSam" type="button" aria-pressed="false" aria-controls="samWorkspace">SAM <small>HBM · A/B/C/Through</small></button>
-<button id="selectXps" type="button" aria-pressed="false" aria-controls="xpsWorkspace">XPS <small>광전자</small></button>
+<button id="selectSem" type="button" aria-pressed="false" aria-controls="semWorkspace">SEM <small>SE · BSE</small></button>
 <button id="selectSims" type="button" aria-pressed="false" aria-controls="simsWorkspace">SIMS <small>이차이온</small></button>
+<button id="selectTem" type="button" aria-pressed="false" aria-controls="temWorkspace">TEM <small>BF · DF · STEM · EELS</small></button>
+<button id="selectXps" type="button" aria-pressed="false" aria-controls="xpsWorkspace">XPS <small>광전자</small></button>
+<button id="selectXrd" type="button" aria-pressed="false" aria-controls="xrdWorkspace">XRD <small>In · Out · XRR</small></button>
 </div><a class="download-package" href="./download/instrument-lab.zip" download>전체 코드 다운로드</a></nav>
 <div id="afmWorkspace"><div class="app">
   <aside class="sidebar">
@@ -50,5 +51,6 @@
 <dialog id="aboutDialog"><button id="closeAbout" aria-label="안내 닫기">×</button><div class="eyebrow">ABOUT THIS MODEL</div><h2>작은 표면을 이해하는 큰 그림</h2><p>제조사 비식별 · XY 스테이지 이동형 · Z 스캐너 피드백의 접촉 모드 교육 모델입니다. 모든 측정값은 합성이며 실제 장비를 연결하거나 제어하지 않습니다.</p><p>레이저·캔틸레버·광검출기는 확대 표현합니다. Z 피드백은 1차 추종 모델이며 실제 PID, 전압 보정, 힘 교정, 공진 및 팁 형상을 재현하지 않습니다. 검출 신호는 임의 단위(a.u.), 시료와 Z는 합성 nm 값입니다.</p><p>마우스 드래그: 회전 · 스크롤: 확대 · 오른쪽 드래그: 이동. 파트 목록은 키보드로도 선택할 수 있습니다. 분해 보기와 숨기기는 설명을 위한 표시 기능입니다.</p><p>유지보수 가이드는 점검 방향을 제시합니다. 실제 정비는 해당 장비의 제조사 절차와 교육받은 담당자의 판단을 따릅니다.</p><a href="https://interaktiv.chemie.uni-mainz.de/vpcf1/afm-man.en.html" target="_blank" rel="noreferrer">AFM 원리 참고 · Universität Mainz ↗</a></dialog>
 <div id="toast" role="status" hidden></div></div><div id="fibWorkspace" hidden><iframe id="fibFrame" title="FIB-SEM 장비 탐색" loading="lazy" data-src="./fib/index.html"></iframe></div><div id="temWorkspace" hidden><iframe id="temFrame" title="TEM 장비 탐색" loading="lazy" data-src="./tem/index.html"></iframe></div><div id="xrdWorkspace" hidden><iframe id="xrdFrame" title="XRD 장비 탐색" loading="lazy" data-src="./xrd/index.html"></iframe></div><div id="semWorkspace" hidden><iframe id="semFrame" title="SEM 장비 탐색" loading="lazy" data-src="./sem/index.html"></iframe></div><div id="samWorkspace" hidden><iframe id="samFrame" title="HBM SAM 장비 탐색" loading="lazy" data-src="./sam/index.html"></iframe></div>
 <div id="xpsWorkspace" hidden><iframe id="xpsFrame" title="XPS 장비 탐색" loading="lazy" data-src="./spectroscopy/xps.html"></iframe></div>
-<div id="simsWorkspace" hidden><iframe id="simsFrame" title="SIMS 장비 탐색" loading="lazy" data-src="./spectroscopy/sims.html"></iframe></div><script type="module" src="/src/main.js"></script>
+<div id="simsWorkspace" hidden><iframe id="simsFrame" title="SIMS 장비 탐색" loading="lazy" data-src="./spectroscopy/sims.html"></iframe></div>
+<div id="aptWorkspace" hidden><iframe id="aptFrame" title="APT 장비 탐색" loading="lazy" data-src="./apt/index.html"></iframe></div><script type="module" src="/src/main.js"></script>
 </body></html>
