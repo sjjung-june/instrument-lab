@@ -2,6 +2,9 @@ import './style.css';
 import './extra.css';
 import {PARTS,MODES,GUIDES,SemEngine} from './simulation.js';
 import {createScene} from './scene.js';
+import {PlaybackClock} from '../../src/shared/playback.js';
+import {mountViewerControls} from '../../src/shared/viewer-controls.js';
+const playbackClock=new PlaybackClock();
 
 const byId=id=>document.getElementById(id);
 const engine=new SemEngine();let scene;
@@ -51,7 +54,9 @@ byId('symptomSelect').onchange=event=>{
 };
 byId('exportButton').onclick=()=>{if(!engine.index)return;const url=URL.createObjectURL(new Blob(['\ufeff'+engine.csv()],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`sem-${engine.mode}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 byId('aboutButton').onclick=()=>byId('aboutDialog').showModal();byId('closeAbout').onclick=()=>byId('aboutDialog').close();
-setMode('se');let previous=performance.now(),lastIndex=-1;
-function animate(time){const delta=Math.max(0,(time-previous)/1000);previous=time;engine.tick(delta);if(engine.index!==lastIndex){drawImage();update();lastIndex=engine.index;}scene?.render(engine,Math.min(delta,.1),time);requestAnimationFrame(animate);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}previous=performance.now();});
+setMode('se');let lastIndex=-1;
+function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if(engine.index!==lastIndex){drawImage();update();lastIndex=engine.index;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);requestAnimationFrame(animate);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});
 requestAnimationFrame(animate);
+
+mountViewerControls(scene,playbackClock);

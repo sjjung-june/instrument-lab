@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {copperPattern} from './sims.js';
+import {applyHighlight} from '../../src/shared/highlight.js';
 
 export function createScene(container,config,onSelect,kind){
   const world=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.1,100),renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0xffffff,0);container.appendChild(renderer.domElement);
@@ -44,7 +45,7 @@ export function createScene(container,config,onSelect,kind){
   const incident=beam(kind==='xps'?0xe9b238:0x45a6d4,.037),etch=beam(0xf38c4f,.035),compensator=beam(0x6dbf97,.022),collection=Array.from({length:Math.max(path.length,magneticPath?.length||0)},()=>beam(0xa36cce,.029));
   const pulse=new THREE.Mesh(new THREE.SphereGeometry(.07,16,12),new THREE.MeshBasicMaterial({color:0xf5dcff,depthTest:false}));pulse.renderOrder=8;world.add(pulse);
   let selected='sample',focused=true,related=[],exploded=false,spread=0;
-  function highlight(){for(const object of meshes){const active=object.userData.part===selected,near=related.includes(object.userData.part),dim=focused&&!active&&!near;object.material.color.copy(original.get(object));if(active&&focused)object.material.color.lerp(new THREE.Color(0x249f8b),.35);object.material.transparent=dim||glass.has(object);object.material.opacity=dim?.2:1;object.material.depthWrite=!dim;object.material.emissive.set(active&&focused?0x0b806e:near?0xab7929:0);object.material.emissiveIntensity=.2;outlines.get(object).visible=(active&&focused)||near;outlines.get(object).material.color.set(active?0x087c6b:0xc38b25);}}highlight();
+  function highlight(){for(const object of meshes)applyHighlight(object,original.get(object),outlines.get(object),{active:object.userData.part===selected,related:related.includes(object.userData.part),focused,baseOpacity:glass.has(object)?.12:1});}highlight();
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
   renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});renderer.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes.filter(object=>object.visible&&object.parent.visible),false)[0];if(hit)onSelect(hit.object.userData.part);});
   new ResizeObserver(()=>{const width=container.clientWidth,height=container.clientHeight;if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}).observe(container);

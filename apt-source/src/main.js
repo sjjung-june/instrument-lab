@@ -5,6 +5,9 @@ import {AptEngine,flightTime,ELEMENTS} from './engine.js';
 import {PARTS,GUIDES} from './config.js';
 import {createInstrument,createReconstruction} from './scene.js';
 import {draw} from './charts.js';
+import {PlaybackClock} from '../../src/shared/playback.js';
+import {mountViewerControls} from '../../src/shared/viewer-controls.js';
+const playbackClock=new PlaybackClock();
 
 const engine=new AptEngine(),byId=id=>document.getElementById(id);let view='reconstruction',filter='all',scene,reconstruction;
 byId('app').innerHTML=`<div class="app"><aside class="sidebar"><div class="brand"><span>✦</span><b>APT<em>lab</em></b></div><div class="eyebrow">ATOM PROBE WORKSPACE</div><h2>한 이벤트에서 3D까지</h2><p class="intro">전계 증발 · TOF · 위치 검출</p><div id="parts"></div><div class="side-footer">GENERALIZED MODEL<p>교육용 합성 데이터 · 실장비 연결 없음</p></div></aside><div class="workspace"><header><b>Workspace / Atom Probe Tomography</b><span>SIMULATION</span></header><main>
@@ -39,6 +42,8 @@ byId('startButton').onclick=()=>{if(engine.status==='scanning')engine.pause();el
 for(const [id,action] of [['focusButton','focus'],['explodeButton','explode']])byId(id).onclick=event=>{const value=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(value));scene?.[action](value);};
 byId('symptomSelect').onchange=event=>{const guide=GUIDES.find(item=>item.id===event.target.value);scene?.related(guide?.parts||[]);document.querySelectorAll('[data-part]').forEach(button=>button.classList.toggle('related',guide?.parts.includes(button.dataset.part)||false));byId('guide').innerHTML=guide?`<div class="guide-parts">${guide.parts.map(id=>`<button data-related="${id}">${PARTS.find(part=>part.id===id).ko}</button>`).join('')}</div><ol>${guide.steps.map(step=>`<li>${step}</li>`).join('')}</ol>`:'';document.querySelectorAll('[data-related]').forEach(button=>button.onclick=()=>selectPart(button.dataset.related));};
 byId('aboutButton').onclick=()=>byId('aboutDialog').showModal();byId('closeAbout').onclick=()=>byId('aboutDialog').close();byId('exportButton').onclick=()=>{if(!engine.index)return;const url=URL.createObjectURL(new Blob(['\ufeff'+engine.csv()],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download=`apt-${engine.mode}-${engine.charge}plus.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-update();let previous=performance.now(),lastIndex=-1,lastUpdate=0;
-function animate(time){const delta=Math.max(0,(time-previous)/1000);previous=time;engine.tick(delta);if(engine.index!==lastIndex&&time-lastUpdate>80){update();lastIndex=engine.index;lastUpdate=time;}scene?.render(engine,Math.min(delta,.1),time);if(view==='reconstruction')reconstruction?.render(engine,filter);requestAnimationFrame(animate);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}previous=performance.now();});requestAnimationFrame(animate);
+update();let lastIndex=-1,lastUpdate=0;
+function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if(engine.index!==lastIndex&&time-lastUpdate>80){update();lastIndex=engine.index;lastUpdate=time;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);if(view==='reconstruction')reconstruction?.render(engine,filter);requestAnimationFrame(animate);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
+
+mountViewerControls(scene,playbackClock);

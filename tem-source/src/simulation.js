@@ -29,10 +29,11 @@ export function imageIntensity(x,y,thickness){const phase=Math.sin(15*x+4*Math.s
 export function diffractionIntensity(x,y,thickness){let value=.025;for(let row=-3;row<=3;row++)for(let col=-3;col<=3;col++){const dx=x-.5-col*.115,dy=y-.5-row*.115;const strength=col===0&&row===0?.8:.5*Math.exp(-.08*(col*col+row*row));value+=strength*transmission(thickness)*Math.exp(-(dx*dx+dy*dy)/.00011);}return Math.min(1,value);}
 export class TemSimulation{
 constructor(){this.thickness=50;this.reflection=1;this.reset();}
-reset(){this.status='idle';this.mode='image';this.progress=0;this.exposureThickness=this.thickness;this.exposureReflection=this.reflection;}
-start(mode,restart=false){if(!MODES[mode])throw Error('Unknown TEM mode');if(!restart&&this.status==='paused'&&this.mode===mode){this.status='exposing';return;}this.mode=mode;this.progress=0;this.exposureThickness=this.thickness;this.exposureReflection=this.reflection;this.status='exposing';}
+reset(){this.status='idle';this.mode=this.mode||'image';this.progress=0;this.exposureThickness=this.thickness;this.exposureReflection=this.reflection;}
+configure(changes){if('mode'in changes&&!MODES[changes.mode])throw new RangeError('Unknown TEM mode');if('thickness'in changes&&(!Number.isFinite(changes.thickness)||changes.thickness<10||changes.thickness>100))throw new RangeError('Invalid thickness');if('reflection'in changes&&![1,2].includes(changes.reflection))throw new RangeError('Invalid reflection');for(const key of ['mode','thickness','reflection'])if(key in changes)this[key]=changes[key];this.reset();}
+start(mode=this.mode,restart=false){if(!MODES[mode])throw Error('Unknown TEM mode');if(!restart&&this.status==='paused'&&this.mode===mode){this.status='exposing';return;}this.mode=mode;this.progress=0;this.exposureThickness=this.thickness;this.exposureReflection=this.reflection;this.status='exposing';}
 pause(){if(this.status==='exposing')this.status='paused';}
-tick(seconds){if(this.status!=='exposing')return;this.progress=Math.min(1,this.progress+seconds/MODES[this.mode].duration);if(this.progress===1)this.status='complete';}
+tick(seconds){if(this.status!=='exposing'||!Number.isFinite(seconds)||seconds<=0)return;this.progress=Math.min(1,this.progress+seconds/MODES[this.mode].duration);if(this.progress>=1-1e-10){this.progress=1;this.status='complete';}}
 get scanXY(){const index=Math.min(4095,Math.floor(this.progress*4096));return [index%64/63,Math.floor(index/64)/63];}
 eelsCsv(){return '# synthetic EELS; no element identification\nenergy_loss_eV,intensity_au\n'+Array.from({length:401},(_,index)=>{const energy=index*2;return energy+','+(eelsIntensity(energy,this.exposureThickness)*this.progress).toFixed(5);}).join('\n');}
 get brightness(){return transmission(this.exposureThickness)*this.progress;}

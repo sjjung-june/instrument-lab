@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {PARTS,heightAt,compositionAt} from './simulation.js';
+import {applyHighlight} from '../../src/shared/highlight.js';
 
 export function createScene(container,onSelect){
   const world=new THREE.Scene();
@@ -58,15 +59,7 @@ export function createScene(container,onSelect){
   const spot=new THREE.Mesh(new THREE.SphereGeometry(.065,16,12),new THREE.MeshBasicMaterial({color:0xffb34e,depthTest:false}));spot.renderOrder=7;world.add(spot);
   const pulse=new THREE.Mesh(new THREE.SphereGeometry(.06,12,8),new THREE.MeshBasicMaterial({color:0xe9d0ff,depthTest:false}));pulse.renderOrder=8;world.add(pulse);
   let selected='gun',related=[],focused=true,exploded=false,spread=0;
-  function highlight(){
-    for(const object of meshes){
-      const active=object.userData.part===selected,near=related.includes(object.userData.part),dim=focused&&!active&&!near;
-      object.material.color.copy(original.get(object));if(active&&focused)object.material.color.lerp(new THREE.Color(0x20a390),.55);
-      object.material.transparent=dim;object.material.opacity=dim?.22:1;object.material.depthWrite=!dim;
-      object.material.emissive.set(focused&&active?0x087867:near?0xb6852a:0);object.material.emissiveIntensity=.2;
-      const outline=outlines.get(object);outline.visible=object!==surface&&((active&&focused)||near);outline.material.color.set(active?0x007967:0xc48920);
-    }
-  }
+  function highlight(){for(const object of meshes)applyHighlight(object,original.get(object),object===surface?null:outlines.get(object),{active:object.userData.part===selected,related:related.includes(object.userData.part),focused});}
   highlight();
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
   renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});

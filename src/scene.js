@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PARTS, stageOffset, surfaceHeight } from './simulation.js';
+import {applyHighlight} from './shared/highlight.js';
 
 const palette={metal:0xc7cbd7,dark:0x49475d,light:0xe2e4eb,purple:0xa995cd,gold:0xd6b77f,teal:0x86b6bb};
 export function createScene(container,onSelect){
@@ -66,10 +67,10 @@ export function createScene(container,onSelect){
   const feedbackDot=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),new THREE.MeshBasicMaterial({color:0x58b5b6}));scene.add(feedbackDot);
   const scanOutline=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-1.3,.93,-1],[1.3,.93,-1],[1.3,.93,1.6],[-1.3,.93,1.6]].map(point=>new THREE.Vector3(...point))),new THREE.LineDashedMaterial({color:0x457f80,dashSize:.1,gapSize:.07}));scanOutline.computeLineDistances();parts.sample.add(scanOutline);
   const scanLine=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xe45170,transparent:true,opacity:.95,depthWrite:false}));parts.sample.add(scanLine);
-  const selectedState={id:'probe',related:[],exploded:false,xray:false};let explodeAmount=0;let time=0;let pointerDown=null;
+  const selectedState={id:'probe',related:[],exploded:false,xray:false,focused:true};let explodeAmount=0;let time=0;let pointerDown=null;
   const outlines=new Map();
   for(const item of selectable){if(item===surface)continue;const outline=new THREE.LineSegments(new THREE.EdgesGeometry(item.geometry,30),new THREE.LineBasicMaterial({color:0x713aca,transparent:true,opacity:.95,depthTest:false}));outline.renderOrder=3;item.add(outline);outlines.set(item,outline);}
-  function highlight(){for(const item of selectable){const selected=item.userData.part===selectedState.id;const related=selectedState.related.includes(item.userData.part);const emphasized=selected||related;item.material.color.copy(originalColors.get(item));if(!emphasized)item.material.color.lerp(new THREE.Color(0xaab0c1),.55);item.material.emissive.set(selected?0x713aca:related?0xc17c10:0x000000);item.material.emissiveIntensity=selected?.32:related?.24:0;item.material.opacity=emphasized?1:selectedState.xray?.12:.3;item.material.transparent=!emphasized;item.material.depthWrite=emphasized;const outline=outlines.get(item);if(outline){outline.visible=emphasized;outline.material.color.set(selected?0x713aca:0xc17c10);}}contourLines.material.opacity=selectedState.id==='sample'||selectedState.related.includes('sample')?.95:.55;}
+  function highlight(){for(const item of selectable){const active=item.userData.part===selectedState.id,near=selectedState.related.includes(item.userData.part);applyHighlight(item,originalColors.get(item),outlines.get(item),{active,related:near,focused:selectedState.focused,baseOpacity:selectedState.xray&&!active&&!near ? .12 : 1});}contourLines.material.opacity=selectedState.id==='sample'||selectedState.related.includes('sample')?.95:.55;}
   const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2();
   function hit(event){const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);return raycaster.intersectObjects(selectable,false).find(result=>parts[result.object.userData.part].visible);}
   const tooltip=container.querySelector('#partTooltip');
@@ -79,8 +80,8 @@ export function createScene(container,onSelect){
   renderer.domElement.addEventListener('pointerleave',()=>{tooltip.hidden=true;pointerDown=null;});
   const observer=new ResizeObserver(()=>{const width=container.clientWidth,height=container.clientHeight;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();});observer.observe(container);
   function updateLine(line,points){line.geometry.setFromPoints(points);}
-  function render(engine,delta){
-    time+=delta;explodeAmount=THREE.MathUtils.damp(explodeAmount,selectedState.exploded?1:0,5,delta);
+  function render(engine,delta,motionDelta=delta){
+    time+=motionDelta;explodeAmount=THREE.MathUtils.damp(explodeAmount,selectedState.exploded?1:0,5,delta);
     const [scanX,scanY]=engine.xy;const stage=stageOffset(scanX,scanY);
     const zPosition=engine.z*.0045-.58+engine.clearance*.72;
     for(const [id,group] of Object.entries(parts)){group.position.set(...offsets[id]).multiplyScalar(explodeAmount);if(id==='sample'){group.position.x+=stage.x;group.position.z+=stage.z;}if(['head','probe','laser','detector','piezo'].includes(id))group.position.y+=zPosition;if(id==='probe')group.rotation.z=engine.deflection*.08;}
@@ -96,5 +97,5 @@ export function createScene(container,onSelect){
     controls.update();renderer.render(scene,camera);
   }
   highlight();
-  return {render,home,setSurface,select(id){selectedState.id=id;highlight();},setRelated(ids){selectedState.related=ids;highlight();},explode(value){selectedState.exploded=value;},xray(value){selectedState.xray=value;highlight();},hide(id){parts[id].visible=!parts[id].visible;return !parts[id].visible;},visible(id){return parts[id].visible;},showAll(){Object.values(parts).forEach(part=>part.visible=true);},get meshCount(){return selectable.length;},dispose(){observer.disconnect();controls.dispose();renderer.dispose();}};
+  return {render,home,setSurface,select(id){selectedState.id=id;highlight();},setRelated(ids){selectedState.related=ids;highlight();},focus(value){selectedState.focused=value;highlight();},explode(value){selectedState.exploded=value;},xray(value){selectedState.xray=value;highlight();},hide(id){parts[id].visible=!parts[id].visible;return !parts[id].visible;},visible(id){return parts[id].visible;},showAll(){Object.values(parts).forEach(part=>part.visible=true);},get meshCount(){return selectable.length;},dispose(){observer.disconnect();controls.dispose();renderer.dispose();}};
 }

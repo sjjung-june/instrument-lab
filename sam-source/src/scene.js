@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {PARTS} from './simulation.js';
+import {applyHighlight} from '../../src/shared/highlight.js';
 
 export function createScene(container,onSelect){
   const world=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.1,100);
@@ -46,7 +47,7 @@ export function createScene(container,onSelect){
     const object=new THREE.Mesh(new THREE.CircleGeometry(1,48),new THREE.MeshBasicMaterial({color:0xf07c65,transparent:true,opacity:.9,side:THREE.DoubleSide,depthTest:false}));object.rotation.x=-Math.PI/2;object.scale.set(data.sx*2.2,data.sy*2.2,1);object.position.set((data.x-.5)*2.2,2.1-data.depth*.002,(data.y-.5)*2.2);object.renderOrder=8;world.add(object);defects.push({object,...data});
   }
   let selected='stack',related=[],focused=true,exploded=false,truth=false,spread=0;
-  function highlight(){for(const object of meshes){const active=object.userData.part===selected,near=related.includes(object.userData.part),dim=focused&&!active&&!near,isGlass=glass.has(object);object.material.color.copy(original.get(object));if(active&&focused&&!isGlass)object.material.color.lerp(new THREE.Color(0x159d88),.4);object.material.transparent=dim||isGlass;object.material.opacity=isGlass?.12:dim?.2:1;object.material.depthWrite=!dim&&!isGlass;object.material.emissive.set(active&&focused?0x087a66:near?0xb6852a:0);object.material.emissiveIntensity=.2;const outline=outlines.get(object);outline.visible=!isGlass&&((active&&focused)||near);outline.material.color.set(active?0x087a66:0xc48c27);}}
+  function highlight(){for(const object of meshes)applyHighlight(object,original.get(object),outlines.get(object),{active:object.userData.part===selected,related:related.includes(object.userData.part),focused,baseOpacity:glass.has(object)?.12:1});}
   highlight();
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
   renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});

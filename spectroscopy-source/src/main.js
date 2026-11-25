@@ -7,6 +7,9 @@ import {XpsEngine,NARROW_REGIONS,PHOTON_ENERGY,kineticEnergy} from './xps.js';
 import {SimsEngine,SPECIES,flightTime} from './sims.js';
 import {createScene} from './scene.js';
 import {plot,COLORS} from './charts.js';
+import {PlaybackClock} from '../../src/shared/playback.js';
+import {mountViewerControls} from '../../src/shared/viewer-controls.js';
+const playbackClock=new PlaybackClock();
 
 const kind=document.body.dataset.instrument,xps=kind==='xps',config=xps?CONFIG.xps:simsConfig('tof'),engine=xps?new XpsEngine():new SimsEngine(),byId=id=>document.getElementById(id);
 byId('app').innerHTML=`<div class="app"><aside class="sidebar"><div class="brand"><span>${xps?'◉':'⋮'}</span><b>${config.title}<em>lab</em></b></div><div class="eyebrow">SURFACE ANALYSIS WORKSPACE</div><h2>구조에서 스펙트럼까지</h2><p class="intro">${xps?'광전자 · 화학 상태':'이차이온 · 질량/전하'}</p><div id="parts"></div><div class="side-footer">GENERALIZED MODEL<p>교육용 · 합성 데이터 · 실장비 연결 없음</p></div></aside><div class="workspace"><header><b>Workspace / ${config.subtitle}</b><span>SIMULATION</span></header><main>
@@ -55,6 +58,8 @@ for(const [id,action] of [['focusButton','focus'],['explodeButton','explode']])b
 byId('symptomSelect').onchange=event=>{const guide=config.guides.find(item=>item.id===event.target.value);scene?.related(guide?.parts||[]);document.querySelectorAll('[data-part]').forEach(button=>button.classList.toggle('related',guide?.parts.includes(button.dataset.part)||false));byId('guide').innerHTML=guide?`<div class="guide-parts">${guide.parts.map(id=>`<button data-related="${id}">${config.parts.find(part=>part.id===id).ko}</button>`).join('')}</div><ol>${guide.steps.map(step=>`<li>${step}</li>`).join('')}</ol>`:'';document.querySelectorAll('[data-related]').forEach(button=>button.onclick=()=>selectPart(button.dataset.related));};
 byId('aboutButton').onclick=()=>byId('aboutDialog').showModal();byId('closeAbout').onclick=()=>byId('aboutDialog').close();byId('exportButton').onclick=()=>{if(!engine.index)return;const url=URL.createObjectURL(new Blob(['\ufeff'+engine.csv()],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`${kind}${xps?'':'-'+engine.technology}-${engine.mode==='highres'?'narrow-'+engine.region:engine.mode}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 if(!xps)mountTechnology(engine,config,configure,selectPart);
-populateSpecies();update();draw();let previous=performance.now(),lastDraw=0,lastIndex=-1,lastPhase='';
-function animate(time){const delta=Math.max(0,(time-previous)/1000);previous=time;engine.tick(delta);if((engine.index!==lastIndex||engine.phase!==lastPhase)&&time-lastDraw>60){update();draw();lastDraw=time;lastIndex=engine.index;lastPhase=engine.phase;}scene?.render(engine,Math.min(delta,.1),time);requestAnimationFrame(animate);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}previous=performance.now();});requestAnimationFrame(animate);
+populateSpecies();update();draw();let lastDraw=0,lastIndex=-1,lastPhase='';
+function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if((engine.index!==lastIndex||engine.phase!==lastPhase)&&time-lastDraw>60){update();draw();lastDraw=time;lastIndex=engine.index;lastPhase=engine.phase;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);requestAnimationFrame(animate);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
+
+mountViewerControls(scene,playbackClock);

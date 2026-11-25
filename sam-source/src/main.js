@@ -4,6 +4,9 @@ import './sam.css';
 import {SamEngine,MODES,PARTS,GUIDES,SOUND_SPEED,MAX_DEPTH,timeAtDepth,gatePeak} from './simulation.js';
 import {createScene} from './scene.js';
 import {drawImage,drawWave} from './charts.js';
+import {PlaybackClock} from '../../src/shared/playback.js';
+import {mountViewerControls} from '../../src/shared/viewer-controls.js';
+const playbackClock=new PlaybackClock();
 
 const byId=id=>document.getElementById(id),engine=new SamEngine();let scene;
 function selectPart(id){const part=PARTS.find(item=>item.id===id);if(!part)return;scene?.select(id);byId('selectedLabel').textContent=part.name;byId('partName').textContent=part.name;byId('partKo').textContent=part.ko;byId('partRole').textContent=part.role;byId('partCheck').textContent=part.check;document.querySelectorAll('[data-part]').forEach(button=>{button.classList.toggle('active',button.dataset.part===id);button.setAttribute('aria-pressed',String(button.dataset.part===id));});}
@@ -37,6 +40,8 @@ for(const guide of GUIDES){const option=document.createElement('option');option.
 byId('symptomSelect').onchange=event=>{const guide=GUIDES.find(item=>item.id===event.target.value);scene?.related(guide?.parts||[]);document.querySelectorAll('[data-part]').forEach(button=>button.classList.toggle('related',guide?.parts.includes(button.dataset.part)||false));byId('guide').innerHTML=guide?`<div class="guide-parts">${guide.parts.map(id=>`<button data-related="${id}">${PARTS.find(part=>part.id===id).ko}</button>`).join('')}</div><ol>${guide.steps.map(step=>`<li>${step}</li>`).join('')}</ol><p>${guide.note}</p>`:'';document.querySelectorAll('[data-related]').forEach(button=>button.onclick=()=>selectPart(button.dataset.related));};
 byId('aboutButton').onclick=()=>byId('aboutDialog').showModal();byId('closeAbout').onclick=()=>byId('aboutDialog').close();
 byId('exportButton').onclick=()=>{if(!engine.index)return;const url=URL.createObjectURL(new Blob(['\ufeff'+engine.csv()],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`sam-hbm-${engine.mode}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-update();draw();let previous=performance.now(),lastDraw=0,lastIndex=-1;
-function animate(time){const delta=Math.max(0,(time-previous)/1000);previous=time;engine.tick(delta);if(engine.index!==lastIndex&&time-lastDraw>60){draw();update();lastDraw=time;lastIndex=engine.index;}scene?.render(engine,Math.min(delta,.1),time);requestAnimationFrame(animate);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}previous=performance.now();});requestAnimationFrame(animate);
+update();draw();let lastDraw=0,lastIndex=-1;
+function animate(time){const delta=playbackClock.step(time);engine.tick(delta);if(engine.index!==lastIndex&&time-lastDraw>60){draw();update();lastDraw=time;lastIndex=engine.index;}scene?.render(engine,playbackClock.realDelta,playbackClock.elapsed);requestAnimationFrame(animate);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){engine.pause();update();}playbackClock.resetTimestamp();});requestAnimationFrame(animate);
+
+mountViewerControls(scene,playbackClock);

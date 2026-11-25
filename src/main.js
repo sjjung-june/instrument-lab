@@ -3,6 +3,9 @@ import './equipment.css';
 import {EQUIPMENT} from './equipment.js';
 import { ScanEngine, PARTS, GUIDES } from './simulation.js';
 import { createScene } from './scene.js';
+import {PlaybackClock} from './shared/playback.js';
+import {mountViewerControls} from './shared/viewer-controls.js';
+const playbackClock=new PlaybackClock();
 
 const byId=id=>document.getElementById(id);
 const engine=new ScanEngine();let selected='probe';let mapChannel='trace';let scene;let toastTimer;let activeGuide='noise';
@@ -53,7 +56,9 @@ function updateUI(){
   byId('progressBar').style.width=engine.progress*100+'%';byId('progressText').textContent=`${Math.floor(engine.progress*100)}% · 5 × 5 μm`;byId('scanPosition').textContent=`Line ${String(engine.line+1).padStart(2,'0')} / ${engine.size} · ${engine.direction} ${engine.direction==='Trace'?'→':'←'}`;byId('profileLine').textContent='LINE '+String(engine.line+1).padStart(2,'0');
   byId('deflectionValue').textContent=engine.deflection.toFixed(3)+' a.u.';byId('detectorValue').textContent='Δ / SUM '+engine.deflection.toFixed(3);byId('errorValue').textContent=engine.error.toFixed(2)+' nm error';byId('zValue').textContent=engine.z.toFixed(2)+' nm';byId('detectorSpot').style.transform=`translateY(${Math.max(-10,Math.min(10,-engine.deflection*40))}px)`;document.body.classList.toggle('scanning',engine.status==='scanning');
 }
-let previous=null,lastDraw=0;
-function animate(now){const delta=previous===null?0:Math.max(0,Math.min((now-previous)/1000,.1));previous=now;engine.tick(delta);scene?.render(engine,delta);if(now-lastDraw>65){drawData();updateUI();lastDraw=now;}requestAnimationFrame(animate);}
-document.addEventListener('visibilitychange',()=>{previous=null;});
+let lastDraw=0;
+function animate(now){const delta=playbackClock.step(now);engine.tick(delta);scene?.render(engine,playbackClock.realDelta,delta);if(now-lastDraw>65){drawData();updateUI();lastDraw=now;}requestAnimationFrame(animate);}
+document.addEventListener('visibilitychange',()=>{playbackClock.resetTimestamp();});
 drawData();updateUI();requestAnimationFrame(animate);
+
+mountViewerControls(scene,playbackClock);

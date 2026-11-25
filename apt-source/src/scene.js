@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {ELEMENTS} from './engine.js';
+import {applyHighlight} from '../../src/shared/highlight.js';
 
 function viewport(container,background){
   const world=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.05,100),renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -35,7 +36,7 @@ export function createInstrument(container,parts,onSelect){
   const ions=Array.from({length:6},()=>{const object=new THREE.Mesh(new THREE.SphereGeometry(.045,12,8),new THREE.MeshBasicMaterial({color:0xb17ddd,depthTest:false}));object.renderOrder=8;world.add(object);return object;});
   let selected='tip',focused=true,related=[],exploded=false,spread=0;
   const offsets={tip:[-1,0,0],electrode:[0,1,0],laser:[-1,1,-.5],pulser:[-1,0,1],flight:[0,1,0],detector:[1,0,0],cryostat:[0,-.1,1],vacuum:[0,-.2,-.4]};
-  function highlight(){for(const object of meshes){const active=object.userData.part===selected,near=related.includes(object.userData.part),dim=focused&&!active&&!near;object.material.color.copy(object.userData.color);object.material.transparent=dim||object.userData.glass;object.material.opacity=dim?.15:object.userData.glass?.18:1;object.material.depthWrite=!object.material.transparent;object.material.emissive.set(active&&focused?0x127d6b:near?0xa67122:0);object.material.emissiveIntensity=.25;const outline=object.userData.outline;outline.visible=(active&&focused)||near;outline.material.color.set(active?0x0c8a78:0xc88b2e);}}highlight();
+  function highlight(){for(const object of meshes)applyHighlight(object,object.userData.color,object.userData.outline,{active:object.userData.part===selected,related:related.includes(object.userData.part),focused,baseOpacity:object.userData.glass?.18:1});}highlight();
   const pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();let down;
   renderer.domElement.addEventListener('pointerdown',event=>{down=[event.clientX,event.clientY];});
   renderer.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes,false)[0];if(hit)onSelect(hit.object.userData.part);});
