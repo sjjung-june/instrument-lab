@@ -74,7 +74,7 @@ export function createScene(container,onSelect){
     for(const [id,group] of Object.entries(groups))group.position.set(...offsets[id]).multiplyScalar(spread);
     const coordinate=engine.coordinate(),point=new THREE.Vector3((coordinate.x-.5)*1.8,1.04+heightAt(coordinate.x,coordinate.y),(coordinate.y-.5)*1.8);
     const destination=engine.mode==='se'?new THREE.Vector3(1.4,1.73,.2):new THREE.Vector3(.49,2.23,0);
-    const visible=engine.index>0&&!exploded&&spread<.02;
+    const visible=engine.status==='scanning'&&!exploded&&spread<.02;
     for(const object of [incident,probe,emitted,signal,spot,pulse])object.visible=visible;
     placeBeam(incident,new THREE.Vector3(0,6,0),new THREE.Vector3(0,3.95,0));placeBeam(probe,new THREE.Vector3(0,3.95,0),point);
     placeBeam(emitted,point,destination);placeBeam(signal,destination,new THREE.Vector3(2.9,1.05,.2));

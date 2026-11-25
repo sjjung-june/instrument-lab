@@ -23,7 +23,23 @@ export class AptEngine{
   start(){if(this.status==='complete')this.reset();this.status='scanning';}
   pause(){if(this.status==='scanning')this.status='paused';}
   get progress(){return this.index/this.total;}
-  tick(delta){if(this.status!=='scanning'||!Number.isFinite(delta)||delta<=0)return;this.elapsed=Math.min(this.duration,this.elapsed+delta);const target=Math.min(this.total,Math.floor(this.elapsed/this.duration*this.total+1e-8));while(this.index<target){this.rows.push(eventAt(this.index,this.total,this.voltage,this.charge));this.index++;}if(this.index===this.total)this.status='complete';}
-  metadata(){return {instrument:'APT',pulse_mode:this.mode,effective_acceleration_V_assumed:this.voltage,flight_length_m_assumed:.1,charge_state_assumed:this.charge,sample:'synthetic_Cu_rich_cap_Si_with_B_enriched_layer',reconstruction:'fixed_linear_back_projection_and_event_order_not_physical_inversion',nominal_volume:'radius_8_nm_depth_30_nm',timing:'4096_synthetic_single_ion_events_in_12_animation_seconds',limitations:'no_calibration_mass_overlap_multi_hit_efficiency_or_quantification'};}
+  get batchSize(){return 128;}
+  get cycleCount(){return Math.ceil(this.total/this.batchSize);}
+  get sequence(){
+    const cycles=this.elapsed/this.duration*this.cycleCount,cycle=Math.min(this.cycleCount-1,Math.floor(cycles)),phase=cycles-Math.floor(cycles);
+    const row=eventAt(cycle*this.batchSize,this.total,this.voltage,this.charge),arrival=.18+.64*row.tof/flightTime(65,this.voltage);
+    const active=this.status==='scanning'||this.status==='paused';
+    const stage=!active?this.status:phase<.12?'pulse':phase<.18?'evaporation':phase<arrival?'flight':phase<.86?'detection':'waiting';
+    return {cycle,phase,row,stage,pulseOn:active&&phase<.12,ionVisible:active&&phase>=.18&&phase<arrival,flightProgress:Math.max(0,Math.min(1,(phase-.18)/(arrival-.18))),arrival};
+  }
+  get evaporated(){const cycles=this.elapsed/this.duration*this.cycleCount;return Math.min(this.total,(Math.floor(cycles)+(cycles%1>=.18?1:0))*this.batchSize);}
+  tick(delta){
+    if(this.status!=='scanning'||!Number.isFinite(delta)||delta<=0)return;
+    this.elapsed=Math.min(this.duration,this.elapsed+delta);
+    const cycles=this.elapsed/this.duration*this.cycleCount,completed=Math.floor(cycles)+(cycles%1+1e-8>=.86?1:0),target=Math.min(this.total,completed*this.batchSize);
+    while(this.index<target){this.rows.push(eventAt(this.index,this.total,this.voltage,this.charge));this.index++;}
+    if(this.elapsed>=this.duration-1e-8){this.elapsed=this.duration;this.status='complete';}
+  }
+  metadata(){return {instrument:'APT',pulse_mode:this.mode,effective_acceleration_V_assumed:this.voltage,flight_length_m_assumed:.1,charge_state_assumed:this.charge,sample:'synthetic_Cu_rich_cap_Si_with_B_enriched_layer',reconstruction:'fixed_linear_back_projection_and_event_order_not_physical_inversion',nominal_volume:'radius_8_nm_depth_30_nm',timing:'32_representative_cycles_in_12_simulation_seconds_each_groups_128_independent_synthetic_events_not_128_ions_per_real_pulse',recording:'batch_committed_after_representative_flight_and_detection_gate',displayed_particle:'one_representative_ion_per_cycle_time_expanded_not_real_pulse_rate',limitations:'no_calibration_mass_overlap_multi_hit_efficiency_or_quantification'};}
   csv(){const metadata='"'+JSON.stringify(this.metadata()).replaceAll('"','""')+'"';return ['event,synthetic_species,charge_assumed,mass_to_charge_Da_per_e,tof_ns,detector_x_normalized,detector_y_normalized,nominal_x_nm,nominal_y_nm,nominal_depth_nm,metadata',...this.rows.map(row=>[row.event,row.element,row.charge,row.massToCharge,row.tof,row.hitX,row.hitY,row.x,row.y,row.z,metadata].join(','))].join('\n');}
 }

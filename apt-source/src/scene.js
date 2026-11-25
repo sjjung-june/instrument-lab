@@ -32,8 +32,8 @@ export function createInstrument(container,parts,onSelect){
   box('pulser',[1,.6,.7],0x7e8da7,[-2.5,.65,1.1]);box('pulser',[.3,.3,.3],0x5e7a93,[-2.2,1.2,.7]);
   function beam(color,radius){const object=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,1,12),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,depthTest:false}));object.renderOrder=7;world.add(object);return object;}
   function place(object,start,end){const direction=end.clone().sub(start);object.position.copy(start).add(end).multiplyScalar(.5);object.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.clone().normalize());object.scale.y=direction.length();}
-  const laserBeam=beam(0xe3ac39,.035),voltageBeam=beam(0xef8251,.027),ionBeams=Array.from({length:6},()=>beam(0x9a73c6,.014));
-  const ions=Array.from({length:6},()=>{const object=new THREE.Mesh(new THREE.SphereGeometry(.045,12,8),new THREE.MeshBasicMaterial({color:0xb17ddd,depthTest:false}));object.renderOrder=8;world.add(object);return object;});
+  const laserBeam=beam(0xe3ac39,.035),voltageBeam=beam(0xef8251,.027),ionBeams=Array.from({length:1},()=>beam(0x9a73c6,.014));
+  const ions=Array.from({length:1},()=>{const object=new THREE.Mesh(new THREE.SphereGeometry(.07,12,8),new THREE.MeshBasicMaterial({color:0xb17ddd,depthTest:false}));object.renderOrder=8;world.add(object);return object;});
   let selected='tip',focused=true,related=[],exploded=false,spread=0;
   const offsets={tip:[-1,0,0],electrode:[0,1,0],laser:[-1,1,-.5],pulser:[-1,0,1],flight:[0,1,0],detector:[1,0,0],cryostat:[0,-.1,1],vacuum:[0,-.2,-.4]};
   function highlight(){for(const object of meshes)applyHighlight(object,object.userData.color,object.userData.outline,{active:object.userData.part===selected,related:related.includes(object.userData.part),focused,baseOpacity:object.userData.glass?.18:1});}highlight();
@@ -42,11 +42,11 @@ export function createInstrument(container,parts,onSelect){
   renderer.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes,false)[0];if(hit)onSelect(hit.object.userData.part);});
   function render(engine,delta,time){
     spread=THREE.MathUtils.damp(spread,exploded?1:0,6,delta);for(const [id,group] of Object.entries(groups))group.position.set(...offsets[id]).multiplyScalar(spread);
-    needle.scale.y=1-engine.progress*.2;needle.position.x=-2-engine.progress*.14;apex.position.x=-1.3-engine.progress*.28;
-    const origin=apex.position.clone(),visible=engine.index>0&&!exploded&&spread<.02;
-    laserBeam.visible=visible&&engine.mode==='laser';voltageBeam.visible=visible&&engine.mode==='voltage';place(laserBeam,new THREE.Vector3(-2.5,2.7,-.65),origin);place(voltageBeam,new THREE.Vector3(-2.2,1.2,.7),origin);
-    const running=engine.status==='scanning';laserBeam.material.opacity=running?(Math.sin(time*.012)>0?.95:.2):.65;
-    for(let index=0;index<ions.length;index++){const row=engine.rows[Math.max(0,engine.index-1-index*7)],destination=new THREE.Vector3(3.38,1.5+(row?.hitX||0)*.85,(row?.hitY||0)*.85);ionBeams[index].visible=visible;ions[index].visible=visible;place(ionBeams[index],origin,destination);ions[index].position.lerpVectors(origin,destination,running?((time*.0005+index/ions.length)%1):.3+index*.1);ions[index].material.color.set(ELEMENTS[row?.element||'Si'].color);}
+    needle.scale.y=1-(engine.evaporated/engine.total)*.2;needle.position.x=-2-(engine.evaporated/engine.total)*.14;apex.position.x=-1.3-(engine.evaporated/engine.total)*.28;
+    const origin=apex.position.clone(),sequence=engine.sequence,visible=!exploded&&spread<.02;
+    laserBeam.visible=visible&&sequence.pulseOn&&engine.status==='scanning'&&engine.mode==='laser';voltageBeam.visible=visible&&sequence.pulseOn&&engine.status==='scanning'&&engine.mode==='voltage';place(laserBeam,new THREE.Vector3(-2.5,2.7,-.65),origin);place(voltageBeam,new THREE.Vector3(-2.2,1.2,.7),origin);
+    laserBeam.material.opacity=.95;
+    for(let index=0;index<ions.length;index++){const row=sequence.row,destination=new THREE.Vector3(3.38,1.5+(row?.hitX||0)*.85,(row?.hitY||0)*.85);ionBeams[index].visible=false;ions[index].visible=visible&&(sequence.ionVisible||sequence.stage==='detection');place(ionBeams[index],origin,destination);ions[index].position.lerpVectors(origin,destination,sequence.flightProgress);ions[index].material.color.set(ELEMENTS[row?.element||'Si'].color);}
     controls.update();renderer.render(world,camera);
   }
   return {render,home,select(id){selected=id;highlight();},related(ids){related=ids;highlight();},focus(value){focused=value;highlight();},explode(value){exploded=value;}};

@@ -5,7 +5,7 @@ export class FibSimulation{
   startMilling(){if(this.milling>=1)this.milling=0;this.mode='milling';}
   startImaging(){this.mode='imaging';this.scan=0;this.image.fill(NaN);this.imageDepth=this.milling;}
   pause(){this.mode='paused';}
-  tick(seconds){if(this.mode==='milling'){this.milling=Math.min(1,this.milling+seconds*this.rate/18);if(this.milling===1)this.mode='milled';}else if(this.mode==='imaging'){const before=Math.floor(this.scan*this.size*this.size);this.scan=Math.min(1,this.scan+seconds/6);const after=Math.floor(this.scan*this.size*this.size);for(let i=before;i<after;i++){const row=Math.floor(i/this.size),col=i%this.size;this.image[i]=imageValue(col/(this.size-1),row/(this.size-1),this.imageDepth);}if(this.scan===1)this.mode='imaged';}}
+  tick(seconds){if(!Number.isFinite(seconds)||seconds<=0)return;if(this.mode==='milling'){this.milling=Math.min(1,this.milling+seconds*this.rate/18);if(this.milling===1)this.mode='milled';}else if(this.mode==='imaging'){const before=Math.floor(this.scan*this.size*this.size);this.scan=Math.min(1,this.scan+seconds/6);const after=Math.floor(this.scan*this.size*this.size);for(let i=before;i<after;i++){const row=Math.floor(i/this.size),col=i%this.size;this.image[i]=imageValue(col/(this.size-1),row/(this.size-1),this.imageDepth);}if(this.scan===1)this.mode='imaged';}}
   get depth(){return this.milling*180;}
 }
 export function trenchMask(x,y){const edge=(value,min,max)=>Math.max(0,Math.min(1,(value-min)/.035,(max-value)/.035));return edge(x,.21,.79)*edge(y,.32,.68);}

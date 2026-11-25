@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {copperPattern} from './sims.js';
+import {signalState} from './signals.js';
 import {applyHighlight} from '../../src/shared/highlight.js';
 
 export function createScene(container,config,onSelect,kind){
@@ -52,15 +53,16 @@ export function createScene(container,config,onSelect,kind){
   function render(engine,delta,time){
     const magnetic=engine.technology==='magnetic',activePath=magnetic?magneticPath:path;for(const variant of variants)variant.object.visible=variant.technology===engine.technology;groups.sputter.visible=!magnetic;
     spread=THREE.MathUtils.damp(spread,exploded?1:0,6,delta);for(const [id,group] of Object.entries(groups))group.position.set(...offsets[id]).multiplyScalar(spread);
-    const oxideDepth=Math.max(0,engine.depth-(kind==='sims'?8:0)),remaining=Math.max(0,engine.thickness-oxideDepth),oxideHeight=Math.max(.006,remaining*.025),substrateDrop=Math.max(0,oxideDepth-engine.thickness)*.003;
-    oxide.scale.y=oxideHeight;oxide.position.y=.79+oxideHeight/2-substrateDrop;surface.position.y=.79+oxideHeight-substrateDrop;surface.visible=engine.depth<2;
-    for(const object of patches){object.scale.y=Math.max(.002,(8-engine.depth)*.02);object.position.y=.79+oxideHeight+object.scale.y/2-substrateDrop;object.visible=engine.depth<8;}
-    const raster=engine.mode==='image',last=engine.rows.at(-1),coordinate=raster&&last?last:{x:kind==='sims'?.32:.5,y:.5},copperHeight=kind==='sims'&&copperPattern(coordinate.x,coordinate.y)?Math.max(0,8-engine.depth)*.02:0;
+    const depth=engine.surfaceDepth??engine.depth;
+    const oxideDepth=Math.max(0,depth-(kind==='sims'?8:0)),remaining=Math.max(0,engine.thickness-oxideDepth),oxideHeight=Math.max(.006,remaining*.025),substrateDrop=Math.max(0,oxideDepth-engine.thickness)*.003;
+    oxide.scale.y=oxideHeight;oxide.position.y=.79+oxideHeight/2-substrateDrop;surface.position.y=.79+oxideHeight-substrateDrop;surface.visible=depth<2;
+    for(const object of patches){object.scale.y=Math.max(.002,(8-depth)*.02);object.position.y=.79+oxideHeight+object.scale.y/2-substrateDrop;object.visible=depth<8;}
+    const raster=engine.mode==='image',last=engine.rows.at(-1),coordinate=raster&&last?last:{x:kind==='sims'?.32:.5,y:.5},copperHeight=kind==='sims'&&copperPattern(coordinate.x,coordinate.y)?Math.max(0,8-depth)*.02:0;
     const point=new THREE.Vector3((coordinate.x-.5)*2.28,.81+oxideHeight-substrateDrop+copperHeight,(coordinate.y-.5)*2.09);
-    const visible=engine.index>0&&!exploded&&spread<.02,etching=engine.phase==='sputter';incident.visible=visible&&!etching;incident.material.opacity=kind==='sims'&&!magnetic&&engine.status==='scanning'?.25+.7*(Math.sin(time*.012)>0?1:0):.9;etch.visible=visible&&etching;compensator.visible=visible&&!etching&&(kind==='sims'||engine.neutralizer);pulse.visible=visible&&!etching;
+    const visible=!exploded&&spread<.02,signals=signalState(engine);incident.visible=visible&&signals.input;incident.material.opacity=.9;etch.visible=visible&&signals.etch;compensator.visible=visible&&(signals.input||signals.output)&&(kind==='sims'||engine.neutralizer);pulse.visible=visible&&signals.output;
     place(incident,sourceEnd,point);place(etch,sputterStart,point);place(compensator,new THREE.Vector3(.9,1.2,.55),point);
-    let start=point;for(let index=0;index<collection.length;index++){collection[index].visible=visible&&!etching&&index<activePath.length;if(index<activePath.length){place(collection[index],start,activePath[index]);start=activePath[index];}}
-    const phase=engine.status==='scanning'?(time*.001)%1:.5,segment=Math.min(activePath.length-1,Math.floor(phase*activePath.length)),from=segment?activePath[segment-1]:point,to=activePath[segment];pulse.position.lerpVectors(from,to,(phase*activePath.length)%1);controls.update();renderer.render(world,camera);
+    let start=point;for(let index=0;index<collection.length;index++){collection[index].visible=visible&&signals.output&&index<activePath.length;if(index<activePath.length){place(collection[index],start,activePath[index]);start=activePath[index];}}
+    const phase=signals.flightProgress,segment=Math.min(activePath.length-1,Math.floor(phase*activePath.length)),from=segment?activePath[segment-1]:point,to=activePath[segment];pulse.position.lerpVectors(from,to,(phase*activePath.length)%1);controls.update();renderer.render(world,camera);
   }
   return {render,home,select(id){selected=id;highlight();},related(ids){related=ids;highlight();},focus(value){focused=value;highlight();},explode(value){exploded=value;}};
 }

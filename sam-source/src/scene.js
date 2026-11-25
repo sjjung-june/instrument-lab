@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {PARTS} from './simulation.js';
+import {PARTS,representativeReflection} from './simulation.js';
 import {applyHighlight} from '../../src/shared/highlight.js';
 
 export function createScene(container,onSelect){
@@ -60,11 +60,12 @@ export function createScene(container,onSelect){
     const {x,y}=engine.coordinate,px=(x-.5)*2.2,pz=(y-.5)*2.2;
     groups.probe.position.x+=px;groups.probe.position.z+=pz;trolley.position.x=px;trolley.position.z=pz;
     gate.position.y=2.1-engine.center*.002;gate.visible=engine.mode!=='through'&&!exploded&&spread<.02;
-    const visible=engine.index>0&&!exploded&&spread<.02,through=engine.mode==='through';
-    const start=new THREE.Vector3(px,2.9,pz),target=new THREE.Vector3(px,through?.55:gate.position.y,pz),end=through?new THREE.Vector3(0,.55,0):start.clone().add(new THREE.Vector3(.075,0,0));
-    for(const object of [sent,returned,wire,pulse])object.visible=visible;
+    const visible=engine.status==='scanning'&&!exploded&&spread<.02,through=engine.mode==='through';
+    groups.receiver.position.x+=px;groups.receiver.position.z+=pz;
+    const start=new THREE.Vector3(px,2.9,pz),target=new THREE.Vector3(px,through?.55:2.1-representativeReflection(x,y,engine.sample)*.002,pz),end=through?target:start.clone();
+    for(const object of [sent,wire,pulse])object.visible=visible;returned.visible=visible&&!through;
     placeBeam(sent,start,target);placeBeam(returned,target,end);placeBeam(wire,through?end:start,new THREE.Vector3(3.3,.9,.25));
-    const phase=engine.status==='scanning'?(time*.0007)%1:.5;pulse.position.lerpVectors(phase<.5?start:target,phase<.5?target:end,phase<.5?phase*2:(phase-.5)*2);
+    const phase=engine.elapsed%1;wire.visible=visible&&phase>=.9;pulse.visible=visible&&phase<.9;const travel=Math.min(1,phase/.9);pulse.position.lerpVectors(through||travel<.5?start:target,through?target:travel<.5?target:end,through?travel:travel<.5?travel*2:(travel-.5)*2);
     for(const defect of defects)defect.object.visible=truth&&!exploded&&(engine.sample==='both'||engine.sample===defect.type);
     controls.update();renderer.render(world,camera);
   }

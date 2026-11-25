@@ -6,7 +6,8 @@ export class Acquisition{
   get duration(){return this.mode==='depth'?12:this.mode==='image'?8:6;}
   get progress(){return this.index/this.total;}
   get depth(){return this.mode==='depth'?(this.index?this.rows.at(-1).axis:0):0;}
-  get phase(){return this.mode==='depth'&&this.status==='scanning'?(this.elapsed/(this.duration/this.total)%1<.5?'sputter':'analyze'):'analyze';}
+  get surfaceDepth(){if(this.mode!=='depth')return 0;const maximum=this.kind==='sims'?80:30;if(this.elapsed>=this.duration)return maximum;const cycles=this.elapsed/(this.duration/this.total),cycle=Math.floor(cycles);const step=this.technology==='magnetic'?cycles:Math.max(0,cycle-1+Math.min(1,cycles%1*2));return Math.min(maximum,step*maximum/(this.total-1));}
+  get phase(){return this.mode==='depth'&&this.status==='scanning'&&this.elapsed>=this.duration/this.total?(this.elapsed/(this.duration/this.total)%1<.5?'sputter':'analyze'):'analyze';}
   tick(delta){if(this.status!=='scanning'||!Number.isFinite(delta)||delta<=0)return;this.elapsed=Math.min(this.duration,this.elapsed+delta);const target=Math.min(this.total,Math.floor(this.progressAtTime()*this.total+1e-8));while(this.index<target){this.rows.push(this.point(this.index));this.index++;}if(this.index===this.total)this.status='complete';}
   progressAtTime(){return this.elapsed/this.duration;}
   csv(){const metadata='"'+JSON.stringify(this.metadata()).replaceAll('"','""')+'"';return ['instrument,mode,axis,signal_au,si_au,oxide_or_oxygen_au,carbon_au,copper_au,boron_au,nominal_depth_nm,metadata',...this.rows.map(row=>[this.kind,this.mode,row.axis,row.value,row.si??'',row.o??'',row.c??'',row.cu??'',row.b??'',this.mode==='depth'?row.axis:'',metadata].join(','))].join('\n');}

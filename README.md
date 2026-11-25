@@ -2,13 +2,43 @@
 
 제조사 비식별 장비 유지보수·원리 학습용 인터랙티브 3D 웹사이트입니다. 장비 메뉴는 알파벳순 **AFM / APT / FIB / SAM / SEM / SIMS / TEM / XPS / XRD**이며 한 페이지에서 9종을 전환합니다. AFM은 XY 스테이지·Z 피드백, APT는 펄스 전계 증발·TOF·검출 XY·3D 점군, FIB는 가공·SEM 영상, TEM은 BF·DF·STEM·EELS·회절, XRD는 In-plane·Out-of-plane·XRR 기하와 곡선, SEM은 SE·BSE 검출과 래스터 취득을 시뮬레이션합니다. SAM은 HBM 8단 적층의 A/B/C/Through 모드, XPS는 Survey·Narrow·Depth Profiling, SIMS는 M-SIMS(자기 섹터형)와 ToF-SIMS(비행시간형)의 질량·이미지·깊이 분석을 제공합니다. 모든 데이터는 교육용 합성값입니다.
 
+## 입력–출력 개연성 점검 · 2026-11-25
+
+다음은 코드와 공개 원리 자료를 대조한 교육 모델 수준의 점검입니다. 실제 장비 검증·교정이나 완전한 입자/파동 시뮬레이션이 아닙니다.
+
+| 장비 | 입력 → 상호작용 → 출력 | 점검 결과 및 반영 |
+| --- | --- | --- |
+| AFM | 연속 광학 읽기 + XY 이동 → 휨 검출/Z 추종 → Trace/Retrace 높이 | 같은 표면·좌표·오차를 사용. 정렬용 레이저는 대기 중 유지 가능. 실제 PID·힘 교정은 없음. |
+| APT | DC 바이어스 + 레이저/전압 펄스 → 전계 증발 → 이온 비행 → TOF/XY 검출 → 점군 | 독립적으로 반복하던 입자 이동 제거. 펄스 OFF 후 비행하고 검출 게이트 이후에만 데이터를 기록. 팁 소모는 검출 수가 아니라 증발 단계에 연결. |
+| FIB | 이온 조사 → 제거 / 전자빔 주사 → SE 영상 | 가공·관찰 경로 분리 유지. 이전 SEM 영상에 촬영 시 깊이를 표시해 현재 가공면의 실시간 영상으로 오해하지 않도록 함. |
+| SAM | 송신 펄스 → 실제 가상 계면 반사 또는 투과 → RF → 게이트/XY 영상 | 수신 게이트를 반사면으로 쓰던 오류 수정. 같은 RF 계면 중 강한 반사 1개를 3D 대표 표시. Through는 XY 정렬된 아래 수신기로 편도 이동. 완료 위치 보존. |
+| SEM | 연속 전자빔 래스터 → SE/BSE → 픽셀 | 검출 모드·좌표·합성 영상 연결 확인. 완료/대기/일시정지 시 활성 빔·신호 숨김. 실제 상호작용 부피 계산은 없음. |
+| SIMS | M: 연속 스퍼터/분석 → ESA·자기 섹터 / ToF: 입사 펄스 → 이차이온 비행 → 질량 신호 | M 연속 입력과 ToF 펄스 OFF 후 비행을 분리. ToF 깊이 제거/분석 경로는 상호 배타적. 최초 0 nm 분석 후 제거. |
+| TEM | 전자 조사 → BF/DF 선택·STEM 래스터·EELS 에너지 분리 → 해당 영상/스펙트럼 | 모드·취득 상태 연결 확인. 노출 중에만 광로 표시. 실제 산란·회절·다중산란 계산은 없음. |
+| XPS | 연속 X선 → 광전자 → 에너지 분석 → 스펙트럼 / 제거 후 깊이 분석 | 최초 0 nm 표면을 제거 전에 분석. 다음 깊이의 제거가 분석/기록보다 먼저 진행되도록 표면 메쉬 연결. 제거 중 광전자 분석 경로 차단. |
+| XRD | 연속 X선 + 각도 스윕 → 산란/반사 → 각도별 강도 | In/Out/XRR 기하와 곡선 조건 연결 확인. 측정 중에만 활성 입사/출사선 표시. q 화살표는 대기 시에도 정적 기하 안내로 유지. |
+
+### 시간 및 데이터 해석
+
+- APT는 **32개 대표 주기 × 독립 합성 이벤트 128개 = 4,096개**입니다. 실제 한 펄스에 128개 이온이 나온다는 뜻이 아닙니다. 한 주기에서 입자 1개를 대표 표시하고 도착 후 묶음을 기록합니다. 실제 펄스율, 무검출 펄스·다중 히트·지연 증발·비동기 배경은 계산하지 않습니다. 실제 APT에서는 펄스 사이의 배경 증발도 가능하므로 “펄스 ON인 순간에만 이온이 존재한다”는 뜻은 아닙니다.
+- APT의 표시 시간은 확대·정규화된 교육 시간입니다. CSV TOF만 이상식의 ns이며 화면의 주기 길이는 물리적 TOF가 아닙니다. 같은 주기의 상대 비행 속도에 질량/전하 차이를 반영하지만 전압에 따른 실제 ns는 수치 읽기에서 비교합니다.
+- SAM·ToF-SIMS의 3D 입자는 대표 신호입니다. 모든 RF 시간 빈·이미지 픽셀·스펙트럼 취득점과 1:1 동기화된 사건 기반 모델이 아닙니다. SAM RF에는 여러 계면을 합성하지만 3D는 강한 반사 1개만 표시합니다. ToF 스펙트럼의 순차 그리기는 실제 질량 스캔이 아니며 여러 펄스 누적 결과의 점진 표시입니다.
+- 깊이 프로파일의 표면 소모와 최근 기록 깊이는 다를 수 있습니다. 제거가 먼저 진행되고 다음 분석이 끝난 후 기록되기 때문입니다. M-SIMS는 연속 제거/분석을 단순화했고 실제 peak-hopping 체류 시간은 계산하지 않습니다.
+- 완료 후 저장된 그래프는 남지만 활성 신호는 멈춥니다. 일시정지는 학습용 시간 정지이며 실제 장비의 blanker·셔터·전원·진공 상태를 제어하지 않습니다. 조건 변경/초기화는 새 가상 시료입니다.
+
+### 원리 대조 자료
+
+- [CAMECA APT 트리거·TOF](https://www.cameca.com/Products/APT/Introduction-to-APT), [CAMECA 펄스 사이 배경 증발](https://www.cameca.com/Products/APT/LEAP-6000-XR)
+- [NIST ToF-SIMS](https://www.nist.gov/programs-projects/time-flight-secondary-ion-mass-spectrometry), [NIST 자기 섹터 SIMS](https://www.nist.gov/programs-projects/magnetic-sector-secondary-ion-mass-spectrometry)
+- [Thermo Fisher XPS 입력·분석·제거](https://www.thermofisher.com/us/en/home/electron-microscopy/products/xps-instruments/features.html), [PVA TePla SAM](https://www.pvatepla.com/products-technologies/faq-sam/)
+- [JEOL DF](https://www.jeol.com/words/emterms/20121023.001400.php), [JEOL STEM](https://www.jeol.com/words/emterms/20121023.055058.php), [JEOL SE](https://www.jeol.com/words/semterms/20121024.070758.php)
+- [Rigaku XRR](https://rigaku.com/resources/techniques/x-ray-reflectometry-xrr), [Bruker AFM 접촉 모드](https://www.bruker.com/en/products-and-solutions/microscopes/materials-afm/afm-modes/contact-mode.html)
+
 ## 가장 간단한 실행
 
-Node.js 22 이상을 설치한 뒤 이 폴더에서 실행합니다. GitHub 소스에는 생성된 `dist/`가 없으므로 최초 실행 전에 의존성을 설치하고 빌드합니다. 배포 사이트의 다운로드 ZIP에는 빌드 파일도 포함되어 있습니다. 다운로드한 ZIP은 재귀 압축을 피하기 위해 그 안에 추가 ZIP을 포함하지 않습니다.
+Node.js 22 이상이 필요합니다. GitHub 소스에는 `dist/`가 없으므로 먼저 `npm ci`와 `npm run build`를 실행한 뒤 아래 서버를 시작하세요. 배포 사이트의 '전체 코드 다운로드' 또는 저장소의 `public/download/instrument-lab.zip`에는 빌드된 `dist/`가 포함되어 있어 압축을 풀고 바로 실행할 수 있습니다. ZIP에는 재귀적인 압축을 피하기 위해 다운로드 ZIP 자체를 포함하지 않습니다.
 
 ```sh
-npm ci
-npm run build
 node serve.mjs
 ```
 

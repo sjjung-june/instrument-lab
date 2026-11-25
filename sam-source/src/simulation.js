@@ -30,9 +30,15 @@ export function defectAt(x,y,depth,sample='both'){
 }
 function shadow(x,y,depth,sample){return (depth>260&&defectAt(x,y,260,sample) ? .18 : 1)*(depth>590&&defectAt(x,y,590,sample) ? .22 : 1);}
 function wavelet(delta){return Math.cos(2*Math.PI*.1*delta)*Math.exp(-(delta**2)/32);}
+export function interfaceEchoes(x,y,sample='both'){
+  return DEPTHS.map(depth=>({depth,amplitude:(defectAt(x,y,depth,sample)?-.92:depth===690?.32:.14+.02*Math.sin(x*18+y*15+depth))*Math.exp(-depth/1100)*shadow(x,y,depth,sample)}));
+}
+export function representativeReflection(x,y,sample='both'){
+  return interfaceEchoes(x,y,sample).reduce((strongest,echo)=>Math.abs(echo.amplitude)>Math.abs(strongest.amplitude)?echo:strongest).depth;
+}
 export function echoAt(x,y,time,sample='both'){
   let signal=.55*wavelet(time);
-  for(const depth of DEPTHS){const defect=defectAt(x,y,depth,sample);const coefficient=defect?-.92:depth===690?.32:.14+.02*Math.sin(x*18+y*15+depth);signal+=coefficient*Math.exp(-depth/1100)*shadow(x,y,depth,sample)*wavelet(time-timeAtDepth(depth));}
+  for(const {depth,amplitude} of interfaceEchoes(x,y,sample))signal+=amplitude*wavelet(time-timeAtDepth(depth));
   return signal;
 }
 export function gatePeak(x,y,center=260,width=40,sample='both'){
@@ -45,7 +51,7 @@ export function transmissionAt(x,y,sample='both'){let value=.66+.025*Math.sin(x*
 export class SamEngine{
   constructor(size=64){this.size=size;this.depthRows=128;this.mode='c';this.sample='both';this.center=260;this.width=40;this.x=.36;this.y=.45;this.reset();}
   get total(){return this.mode==='a'?512:this.mode==='b'?this.size:this.size**2;}
-  get coordinate(){if(!['scanning','paused'].includes(this.status)||!this.index)return {x:this.x,y:this.y};const index=this.index-1;return this.mode==='a'?{x:this.x,y:this.y}:this.mode==='b'?{x:index/(this.size-1),y:this.y}:{x:(index%this.size)/(this.size-1),y:Math.floor(index/this.size)/(this.size-1)};}
+  get coordinate(){if(!this.index)return {x:this.x,y:this.y};const index=this.index-1;return this.mode==='a'?{x:this.x,y:this.y}:this.mode==='b'?{x:index/(this.size-1),y:this.y}:{x:(index%this.size)/(this.size-1),y:Math.floor(index/this.size)/(this.size-1)};}
   reset(){this.elapsed=0;this.index=0;this.status='idle';this.values=new Float32Array(this.mode==='b'?this.size*this.depthRows:this.total).fill(NaN);}
   configure(changes){
     if(changes.mode&&!MODES[changes.mode])throw new RangeError('Unknown SAM mode');
